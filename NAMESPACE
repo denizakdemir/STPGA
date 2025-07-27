@@ -1,4 +1,75 @@
-export(GenAlgForSubsetSelection,GenAlgForSubsetSelectionNoTest,GenAlgForSubsetSelectionMONoTest,GenAlgForSubsetSelectionMO,AOPT,CDMEAN, CDMEAN0, CDMEAN2,CDMEANMM,DOPT,EOPT,PEVMEAN,PEVMEAN0,PEVMEAN2,PEVMEANMM,GAUSSMEANMM,PEVMAX, PEVMAX0,PEVMAX2,CDMAX, CDMAX0,CDMAX2, GOPTPEV,GOPTPEV2,Amat.pieces, disttoideal, dist_to_test,dist_to_test2,neg_dist_in_train,neg_dist_in_train2)
+# Modern STPGA Package Exports
+
+# Core GA Functions
+export(subset_ga)
+export(subset_ga_single)
+export(subset_ga_multiobjective)
+export(subset_ga_multiobjective_single)
+
+# GA Operators
+export(crossover)
+export(generate_offspring)
+export(mutate_solution)
+export(calculate_diversity)
+export(adaptive_mutation_rate)
+export(tournament_selection)
+export(elite_selection)
+export(crowding_replacement)
+export(fitness_sharing)
+
+# Modern Optimization Criteria
+export(a_optimality)
+export(d_optimality)
+export(e_optimality)
+export(pev_mean)
+export(pev_max)
+export(cd_mean)
+export(pev_mean_mm)
+export(cd_mean_mm)
+export(criterion)
+export(compute_prediction_core)
+
+# Distance Functions
+export(distance_to_ideal)
+export(distance_train_to_test_max)
+export(distance_train_to_test_mean)
+export(distance_internal_min)
+export(distance_internal_mean)
+export(distance_criterion)
+export(population_distances)
+export(diversity_summary)
+
+# Matrix Operations
+export(compute_amatrix)
+export(genomic_relationship_matrix)
+export(safe_matrix_inverse)
+export(matrix_stability_check)
+export(ridge_regression_cv)
+
+# Population Evaluation
+export(evaluate_population)
+export(evaluate_population_smart)
+export(transform_fitness)
+export(compute_population_stats)
+
+# Multi-objective Utilities
+export(non_dominated_sorting)
+export(calculate_crowding_distance)
+export(find_non_dominated)
+
+# Legacy Compatibility Functions (deprecated)
+export(GenAlgForSubsetSelectionMO)
+export(GenAlgForSubsetSelectionMONoTest)
+export(disttoideal)
+export(dist_to_test, dist_to_test2)
+export(neg_dist_in_train, neg_dist_in_train2)
+export(unified_distance_criterion)
+export(calculate_population_distances)
+export(Amat.pieces)
+export(evaluate_population_optimized)
+export(evaluate_population_legacy)
+
+# Required Imports
 import("graphics")
 import("stats")
 import("parallel")

@@ -1,0 +1,588 @@
+---
+title: "STPGA: Subset Training Population Genetic Algorithm"
+author: "Deniz Akdemir"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{STPGA: Subset Training Population Genetic Algorithm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+# Introduction
+
+The **STPGA** (Subset Training Population Genetic Algorithm) package provides advanced tools for optimizing training set selection in genomic prediction and experimental design. This vignette demonstrates the package's key functionalities using real wheat genomic data.
+
+## Key Features
+
+- **Modern optimization criteria**: A-, D-, E-optimality, PEV, Cook's Distance
+- **Mixed model support**: BLUP-based criteria for genomic selection
+- **Genetic algorithms**: Single and multi-objective optimization
+- **Flexible interface**: Unified criterion function with legacy compatibility
+- **Robust numerics**: Ridge regularization and numerical stability
+
+# Getting Started
+
+Let's start by loading the package and exploring the included wheat dataset:
+
+```{r load-package}
+library(STPGA)
+
+# Load the wheat dataset
+data("WheatData")
+
+# Explore the data structure
+cat("Dataset components:\n")
+cat("- Wheat.Y: Phenotype data (", nrow(Wheat.Y), " observations)\n")
+cat("- Wheat.M: Marker data (", nrow(Wheat.M), " individuals x ", ncol(Wheat.M), " markers)\n")
+cat("- Wheat.K: Kinship matrix (", nrow(Wheat.K), " x ", ncol(Wheat.K), ")\n")
+```
+
+```{r explore-data}
+# Look at the phenotype data
+head(Wheat.Y)
+
+# Check marker data dimensions and first few markers
+cat("Marker matrix preview:\n")
+Wheat.M[1:5, 1:5]
+
+# Examine kinship matrix structure
+cat("Kinship matrix diagonal (first 10):\n")
+diag(Wheat.K)[1:10]
+cat("Kinship matrix off-diagonal (first 5x5):\n")
+Wheat.K[1:5, 1:5]
+```
+
+# Optimization Criteria
+
+STPGA provides several optimization criteria for training set selection. Let's demonstrate each using the wheat data.
+
+## Setup for Demonstrations
+
+```{r setup-demo}
+# Define candidate pool and test sets
+all_individuals <- rownames(Wheat.M)
+n_total <- length(all_individuals)
+
+# Create training candidates and test set
+set.seed(123)
+test_set <- sample(all_individuals, 40)
+candidates <- setdiff(all_individuals, test_set)
+
+cat("Total individuals:", n_total, "\n")
+cat("Test set size:", length(test_set), "\n")
+cat("Candidate pool size:", length(candidates), "\n")
+```
+
+## Classical Optimality Criteria
+
+The package implements the classical A-, D-, and E-optimality criteria from experimental design theory.
+
+```{r classical-criteria}
+# Select training sets of different sizes
+train_small <- sample(candidates, 30)
+train_medium <- sample(candidates, 60)
+train_large <- sample(candidates, 100)
+
+# Compute A-optimality (minimizes average prediction variance)
+aopt_small <- a_optimality(train_small, test_set, Wheat.M)
+aopt_medium <- a_optimality(train_medium, test_set, Wheat.M)
+aopt_large <- a_optimality(train_large, test_set, Wheat.M)
+
+cat("A-optimality results:\n")
+cat("Small training (n=30):", sprintf("%.2e", aopt_small), "\n")
+cat("Medium training (n=60):", sprintf("%.2e", aopt_medium), "\n")
+cat("Large training (n=100):", sprintf("%.2e", aopt_large), "\n")
+cat("Improvement (large vs small):", sprintf("%.1fx", aopt_small/aopt_large), "\n")
+
+# D-optimality (minimizes generalized variance)
+dopt_small <- d_optimality(train_small, test_set, Wheat.M)
+dopt_medium <- d_optimality(train_medium, test_set, Wheat.M)
+dopt_large <- d_optimality(train_large, test_set, Wheat.M)
+
+cat("\nD-optimality results:\n")
+cat("Small training (n=30):", sprintf("%.2f", dopt_small), "\n")
+cat("Medium training (n=60):", sprintf("%.2f", dopt_medium), "\n")
+cat("Large training (n=100):", sprintf("%.2f", dopt_large), "\n")
+
+# E-optimality (minimizes maximum variance)
+eopt_small <- e_optimality(train_small, test_set, Wheat.M)
+eopt_medium <- e_optimality(train_medium, test_set, Wheat.M)
+eopt_large <- e_optimality(train_large, test_set, Wheat.M)
+
+cat("\nE-optimality results:\n")
+cat("Small training (n=30):", sprintf("%.2f", eopt_small), "\n")
+cat("Medium training (n=60):", sprintf("%.2f", eopt_medium), "\n")
+cat("Large training (n=100):", sprintf("%.2f", eopt_large), "\n")
+```
+
+## Prediction Error Variance (PEV) Criteria
+
+PEV criteria are particularly relevant for prediction accuracy in genomic selection.
+
+```{r pev-criteria}
+# Mean PEV
+pev_mean_small <- pev_mean(train_small, test_set, Wheat.M)
+pev_mean_large <- pev_mean(train_large, test_set, Wheat.M)
+
+# Normalized PEV (scale-invariant)
+pev_norm_small <- pev_mean(train_small, test_set, Wheat.M, normalized = TRUE)
+pev_norm_large <- pev_mean(train_large, test_set, Wheat.M, normalized = TRUE)
+
+# Maximum PEV (worst-case scenario)
+pev_max_small <- pev_max(train_small, test_set, Wheat.M)
+pev_max_large <- pev_max(train_large, test_set, Wheat.M)
+
+cat("PEV Results:\n")
+cat("Mean PEV (small):", sprintf("%.2e", pev_mean_small), "\n")
+cat("Mean PEV (large):", sprintf("%.2e", pev_mean_large), "\n")
+cat("Improvement:", sprintf("%.1fx", pev_mean_small/pev_mean_large), "\n")
+
+cat("\nNormalized PEV:\n")
+cat("Small training:", sprintf("%.6f", pev_norm_small), "\n")
+cat("Large training:", sprintf("%.6f", pev_norm_large), "\n")
+
+cat("\nMax PEV:\n")
+cat("Small training:", sprintf("%.2e", pev_max_small), "\n")
+cat("Large training:", sprintf("%.2e", pev_max_large), "\n")
+cat("Max/Mean ratio (small):", sprintf("%.2f", pev_max_small/pev_mean_small), "\n")
+cat("Max/Mean ratio (large):", sprintf("%.2f", pev_max_large/pev_mean_large), "\n")
+```
+
+## Cook's Distance Criteria
+
+Cook's Distance identifies influential observations that significantly affect model predictions.
+
+```{r cook-distance}
+# Mean Cook's Distance
+cd_mean_small <- cd_mean(train_small, test_set, Wheat.M)
+cd_mean_large <- cd_mean(train_large, test_set, Wheat.M)
+
+# Normalized Cook's Distance
+cd_norm_small <- cd_mean(train_small, test_set, Wheat.M, normalized = TRUE)
+cd_norm_large <- cd_mean(train_large, test_set, Wheat.M, normalized = TRUE)
+
+cat("Cook's Distance Results:\n")
+cat("Mean CD (small):", sprintf("%.2e", cd_mean_small), "\n")
+cat("Mean CD (large):", sprintf("%.2e", cd_mean_large), "\n")
+
+cat("\nNormalized CD:\n")
+cat("Small training:", sprintf("%.6f", cd_norm_small), "\n")
+cat("Large training:", sprintf("%.6f", cd_norm_large), "\n")
+```
+
+# Mixed Model Criteria for Genomic Selection
+
+For genomic selection applications, the package provides mixed model criteria that account for genetic relationships.
+
+```{r mixed-models}
+# Select smaller sets for computational efficiency with mixed models
+train_mm <- sample(candidates, 50)
+test_mm <- sample(test_set, 20)
+
+# Extract relevant kinship submatrices
+K_train <- Wheat.K[train_mm, train_mm]
+K_test <- Wheat.K[test_mm, test_mm]
+K_test_train <- Wheat.K[test_mm, train_mm]
+
+# Mixed model PEV with different heritability scenarios
+h2_high <- list(Vg = 0.8, Ve = 0.2)  # High heritability (80%)
+h2_low <- list(Vg = 0.3, Ve = 0.7)   # Low heritability (30%)
+
+# Use smaller dataset for computational efficiency
+P_subset <- Wheat.M[train_mm, 1:100]  # Use only first 100 markers
+K_subset <- Wheat.K[c(train_mm, test_mm), c(train_mm, test_mm)]
+
+# Compute mixed model criteria with smaller dataset
+pev_mm_high <- pev_mean_mm(train_mm, test_mm, P_subset, K_subset, 
+                           Vg = h2_high$Vg, Ve = h2_high$Ve)
+pev_mm_low <- pev_mean_mm(train_mm, test_mm, P_subset, K_subset, 
+                          Vg = h2_low$Vg, Ve = h2_low$Ve)
+
+cd_mm_high <- cd_mean_mm(train_mm, test_mm, P_subset, K_subset, 
+                         Vg = h2_high$Vg, Ve = h2_high$Ve)
+cd_mm_low <- cd_mean_mm(train_mm, test_mm, P_subset, K_subset, 
+                        Vg = h2_low$Vg, Ve = h2_low$Ve)
+
+cat("Mixed Model Results:\n")
+cat("PEV (h² = 0.8):", sprintf("%.6f", pev_mm_high), "\n")
+cat("PEV (h² = 0.3):", sprintf("%.6f", pev_mm_low), "\n")
+cat("Heritability effect:", sprintf("%.2fx", pev_mm_low/pev_mm_high), "\n")
+
+cat("\nCook's Distance (mixed model):\n")
+cat("CD (h² = 0.8):", sprintf("%.6f", cd_mm_high), "\n")
+cat("CD (h² = 0.3):", sprintf("%.6f", cd_mm_low), "\n")
+```
+
+# Unified Criterion Interface
+
+The `criterion()` function provides a unified interface to all optimization criteria, supporting both modern and legacy names.
+
+```{r unified-interface}
+# Define a medium-sized training set
+train_unified <- sample(candidates, 60)
+
+# Test all modern criteria
+modern_criteria <- c("a_optimality", "d_optimality", "e_optimality", 
+                     "pev_mean", "pev_max", "cd_mean")
+
+cat("Modern Criteria Results:\n")
+cat("========================\n")
+for (crit in modern_criteria) {
+  value <- criterion(train_unified, test_set, Wheat.M, criterion = crit)
+  cat(sprintf("%-15s: %12.6e\n", crit, value))
+}
+
+# Test normalized versions
+cat("\nNormalized Criteria:\n")
+cat("===================\n")
+pev_norm <- criterion(train_unified, test_set, Wheat.M, criterion = "pev_mean_normalized")
+cd_norm <- criterion(train_unified, test_set, Wheat.M, criterion = "cd_mean_normalized")
+cat(sprintf("%-20s: %12.6f\n", "pev_mean_normalized", pev_norm))
+cat(sprintf("%-20s: %12.6f\n", "cd_mean_normalized", cd_norm))
+
+# Test mixed model criteria (using subset for speed)
+cat("\nMixed Model Criteria (100 markers):\n")
+cat("===================================\n")
+P_unified_subset <- Wheat.M[c(train_unified, test_set), 1:100]
+K_unified_subset <- Wheat.K[c(train_unified, test_set), c(train_unified, test_set)]
+pev_mm <- criterion(train_unified, test_set, P_unified_subset, criterion = "pev_mean_mm", K = K_unified_subset)
+cd_mm <- criterion(train_unified, test_set, P_unified_subset, criterion = "cd_mean_mm", K = K_unified_subset)
+cat(sprintf("%-15s: %12.6e\n", "pev_mean_mm", pev_mm))
+cat(sprintf("%-15s: %12.6e\n", "cd_mean_mm", cd_mm))
+
+# Demonstrate legacy compatibility
+cat("\nLegacy Compatibility:\n")
+cat("====================\n")
+aopt_modern <- criterion(train_unified, test_set, Wheat.M, criterion = "a_optimality")
+aopt_legacy <- criterion(train_unified, test_set, Wheat.M, criterion = "AOPT")
+cat("Modern a_optimality:", sprintf("%.6e", aopt_modern), "\n")
+cat("Legacy AOPT:        ", sprintf("%.6e", aopt_legacy), "\n")
+cat("Values match:", aopt_modern == aopt_legacy, "\n")
+```
+
+# Genetic Algorithm Optimization
+
+STPGA's core functionality is optimizing training set selection using genetic algorithms.
+
+## Single-Objective Optimization
+
+```{r single-objective-ga}
+# Define optimization parameters
+n_select <- 40  # Number of individuals to select
+n_candidates <- length(candidates)
+
+cat("Genetic Algorithm Optimization\n")
+cat("==============================\n")
+cat("Candidate pool size:", n_candidates, "\n")
+cat("Selection target:", n_select, "\n")
+cat("Test set size:", length(test_set), "\n")
+
+# For demonstration, we'll optimize manually by testing several training sets
+set.seed(456)
+n_trials <- 10
+best_fitness <- Inf
+best_solution <- NULL
+
+cat("Manual optimization (", n_trials, " random trials):\n")
+for (i in 1:n_trials) {
+  trial_solution <- sample(candidates, n_select)
+  trial_fitness <- pev_mean(trial_solution, test_set, Wheat.M, normalized = TRUE)
+  
+  if (trial_fitness < best_fitness) {
+    best_fitness <- trial_fitness
+    best_solution <- trial_solution
+  }
+  
+  if (i <= 3) {  # Show first few trials
+    cat(sprintf("Trial %d: PEV = %.8f\n", i, trial_fitness))
+  }
+}
+
+cat("\nOptimization Results:\n")
+cat("Best solution size:", length(best_solution), "\n")
+cat("Best fitness:", sprintf("%.8f", best_fitness), "\n")
+
+# Compare with random selection
+random_selection <- sample(candidates, n_select)
+random_fitness <- pev_mean(random_selection, test_set, Wheat.M, normalized = TRUE)
+improvement <- (random_fitness - best_fitness) / random_fitness * 100
+
+cat("\nComparison with random selection:\n")
+cat("Random selection PEV:", sprintf("%.8f", random_fitness), "\n")
+cat("Optimized PEV:       ", sprintf("%.8f", best_fitness), "\n")
+cat("Improvement:         ", sprintf("%.2f%%", improvement), "\n")
+```
+
+```{r plot-optimization, fig.width=8, fig.height=5}
+# Plot optimization trials
+if (n_trials > 0) {
+  # Simulate a series of trials for plotting
+  trial_results <- numeric(n_trials)
+  set.seed(456)
+  for (i in 1:n_trials) {
+    trial_solution <- sample(candidates, n_select)
+    trial_results[i] <- pev_mean(trial_solution, test_set, Wheat.M, normalized = TRUE)
+  }
+  
+  # Plot the trials
+  plot(1:n_trials, trial_results, type = "b", pch = 19, col = "blue", lwd = 2,
+       xlab = "Trial Number", ylab = "PEV (normalized)", 
+       main = "Training Set Optimization Trials")
+  grid(TRUE)
+  
+  # Highlight best solution
+  best_idx <- which.min(trial_results)
+  points(best_idx, trial_results[best_idx], col = "red", pch = 19, cex = 1.5)
+  
+  # Add random baseline
+  abline(h = random_fitness, col = "gray", lty = 2, lwd = 2)
+  text(n_trials * 0.7, random_fitness, "Random Selection", 
+       col = "gray", pos = 3)
+  
+  legend("topright", 
+         legend = c("Trials", "Best", "Random"),
+         pch = c(19, 19, NA),
+         lty = c(1, NA, 2),
+         col = c("blue", "red", "gray"))
+}
+```
+
+## Multi-Objective Optimization
+
+STPGA supports multi-objective optimization to find Pareto-optimal solutions.
+
+```{r multi-objective-demo}
+# Multi-objective demonstration: evaluate trade-offs between criteria
+cat("Multi-Objective Analysis\n")
+cat("========================\n")
+
+# Generate several solutions and evaluate on multiple criteria
+set.seed(789)
+n_solutions <- 8
+solutions <- list()
+pev_values <- numeric(n_solutions)
+cd_values <- numeric(n_solutions)
+
+for (i in 1:n_solutions) {
+  solutions[[i]] <- sample(candidates, n_select)
+  pev_values[i] <- pev_mean(solutions[[i]], test_set, Wheat.M, normalized = TRUE)
+  cd_values[i] <- cd_mean(solutions[[i]], test_set, Wheat.M, normalized = TRUE)
+}
+
+cat("Multi-criteria evaluation:\n")
+cat("Solution | PEV Mean | CD Mean\n")
+cat("---------|----------|--------\n")
+for (i in 1:n_solutions) {
+  cat(sprintf("%8d | %8.6f | %7.6f\n", i, pev_values[i], cd_values[i]))
+}
+
+# Find solutions that are good for both criteria
+combined_rank <- rank(pev_values) + rank(cd_values)
+best_combined <- which.min(combined_rank)
+
+cat("\nBest combined solution (lowest sum of ranks):", best_combined, "\n")
+cat("PEV:", sprintf("%.6f", pev_values[best_combined]), "\n")
+cat("CD: ", sprintf("%.6f", cd_values[best_combined]), "\n")
+```
+
+```{r plot-criteria-tradeoff, fig.width=8, fig.height=6}
+# Plot the trade-off between criteria
+if (length(pev_values) > 1 && length(cd_values) > 1) {
+  plot(pev_values, cd_values,
+       pch = 19, col = "blue", cex = 1.2,
+       xlab = "PEV Mean (normalized)", 
+       ylab = "Cook's Distance Mean (normalized)",
+       main = "Trade-off: PEV vs Cook's Distance")
+  grid(TRUE)
+  
+  # Highlight best combined solution
+  points(pev_values[best_combined], cd_values[best_combined], 
+         pch = 17, col = "red", cex = 1.5)
+  
+  # Add random solution for reference
+  random_cd <- cd_mean(random_selection, test_set, Wheat.M, normalized = TRUE)
+  points(random_fitness, random_cd, pch = 15, col = "gray", cex = 1.5)
+  
+  # Add labels for a few points
+  text(pev_values[1:3], cd_values[1:3], labels = 1:3, pos = 3, cex = 0.8)
+  
+  legend("topright", 
+         legend = c("Solutions", "Best Combined", "Random"),
+         pch = c(19, 17, 15),
+         col = c("blue", "red", "gray"))
+}
+```
+
+# Advanced Features
+
+## Ridge Regularization Effects
+
+The package uses ridge regularization for numerical stability. Let's examine its effects:
+
+```{r ridge-regularization}
+# Test different ridge parameters
+lambda_values <- c(1e-8, 1e-6, 1e-4, 1e-2)
+train_ridge <- sample(candidates, 50)
+
+cat("Ridge Regularization Effects:\n")
+cat("=============================\n")
+cat("Lambda\t\tA-optimality\tPEV Mean\n")
+cat("------\t\t------------\t--------\n")
+
+for (lambda in lambda_values) {
+  aopt_ridge <- a_optimality(train_ridge, test_set, Wheat.M, lambda = lambda)
+  pev_ridge <- pev_mean(train_ridge, test_set, Wheat.M, lambda = lambda)
+  cat(sprintf("%.0e\t\t%.6e\t%.6e\n", lambda, aopt_ridge, pev_ridge))
+}
+```
+
+## Matrix Stability and Conditioning
+
+```{r matrix-stability}
+# Demonstrate numerical stability features
+train_stability <- sample(candidates, 80)
+
+# Check matrix conditioning
+P_train <- Wheat.M[train_stability, ]
+xtx <- crossprod(P_train)
+condition_number <- kappa(xtx)
+
+cat("Matrix Conditioning:\n")
+cat("===================\n")
+cat("Training set size:", length(train_stability), "\n")
+cat("Number of markers:", ncol(Wheat.M), "\n")
+cat("X'X condition number:", sprintf("%.2e", condition_number), "\n")
+
+if (condition_number > 1e12) {
+  cat("Matrix is ill-conditioned - ridge regularization recommended\n")
+} else {
+  cat("Matrix is well-conditioned\n")
+}
+
+# Test with extreme case (more predictors than observations)
+train_extreme <- sample(candidates, 10)  # Very small training set
+P_extreme <- Wheat.M[train_extreme, 1:100]  # Subset of markers
+xtx_extreme <- crossprod(P_extreme)
+condition_extreme <- kappa(xtx_extreme)
+
+cat("\nExtreme case (n << p):\n")
+cat("Training set size:", nrow(P_extreme), "\n")
+cat("Number of predictors:", ncol(P_extreme), "\n")
+cat("Condition number:", sprintf("%.2e", condition_extreme), "\n")
+```
+
+# Practical Guidelines
+
+## Training Set Size Recommendations
+
+```{r size-recommendations}
+# Analyze the relationship between training set size and prediction quality
+sizes <- seq(20, 120, by = 20)
+pev_by_size <- numeric(length(sizes))
+
+cat("Training Set Size Analysis:\n")
+cat("===========================\n")
+
+set.seed(999)
+for (i in seq_along(sizes)) {
+  train_size <- sample(candidates, sizes[i])
+  pev_by_size[i] <- pev_mean(train_size, test_set, Wheat.M, normalized = TRUE)
+}
+
+# Create recommendations table
+cat("Size\tNormalized PEV\tRelative to n=20\n")
+cat("----\t--------------\t----------------\n")
+for (i in seq_along(sizes)) {
+  relative <- pev_by_size[1] / pev_by_size[i]
+  cat(sprintf("%4d\t%12.6f\t%12.2fx\n", sizes[i], pev_by_size[i], relative))
+}
+```
+
+```{r plot-size-effect, fig.width=8, fig.height=5}
+# Plot the relationship
+plot(sizes, pev_by_size, type = "b", pch = 19, col = "darkblue", lwd = 2,
+     xlab = "Training Set Size", ylab = "Normalized PEV",
+     main = "Effect of Training Set Size on Prediction Quality")
+grid(TRUE)
+
+# Add trend line
+lm_fit <- lm(pev_by_size ~ I(1/sizes))
+lines(sizes, predict(lm_fit), col = "red", lty = 2, lwd = 2)
+
+# Add recommendations
+abline(v = 60, col = "green", lty = 3)
+text(65, max(pev_by_size) * 0.9, "Recommended\nMinimum", col = "green", pos = 4)
+```
+
+## Criterion Selection Guide
+
+```{r criterion-guide}
+# Compare all criteria on the same training set for guidance
+train_guide <- sample(candidates, 60)
+
+criteria_comparison <- data.frame(
+  Criterion = c("A-optimality", "D-optimality", "E-optimality", 
+                "PEV Mean", "PEV Max", "Cook's Distance"),
+  Modern_Name = c("a_optimality", "d_optimality", "e_optimality",
+                  "pev_mean", "pev_max", "cd_mean"),
+  Use_Case = c("Average prediction variance", "Generalized variance",
+               "Maximum variance", "Prediction accuracy", 
+               "Worst-case prediction", "Influential observations"),
+  stringsAsFactors = FALSE
+)
+
+cat("Criterion Selection Guide:\n")
+cat("=========================\n")
+for (i in 1:nrow(criteria_comparison)) {
+  cat(sprintf("%-15s: %s\n", 
+              criteria_comparison$Criterion[i], 
+              criteria_comparison$Use_Case[i]))
+}
+
+cat("\nFor genomic selection, we recommend:\n")
+cat("- pev_mean_normalized: General prediction accuracy\n")
+cat("- pev_mean_mm: When kinship information is available\n")
+cat("- Multi-objective: Balance multiple criteria\n")
+```
+
+# Conclusion
+
+The STPGA package provides a comprehensive toolkit for optimizing training set selection in genomic prediction and experimental design. Key features include:
+
+1. **Modern API**: Clean, intuitive function names with comprehensive documentation
+2. **Multiple Criteria**: Classical optimality criteria plus prediction-focused measures
+3. **Mixed Models**: Support for genomic selection with kinship matrices
+4. **Genetic Algorithms**: Efficient single and multi-objective optimization
+5. **Numerical Stability**: Ridge regularization and robust matrix operations
+6. **Flexibility**: Unified interface with legacy compatibility
+
+## Best Practices
+
+- Use `pev_mean_normalized` for general prediction accuracy optimization
+- Consider `pev_mean_mm` when genetic relationships are available
+- Apply multi-objective optimization when balancing multiple criteria
+- Use ridge regularization (λ ≥ 1e-6) for numerical stability
+- Select training sets of at least 30-50% of the candidate pool
+- Validate results with cross-validation or independent test sets
+
+## Further Reading
+
+For more details on the algorithms and theoretical background, see the individual function documentation and the package examples in `inst/examples/`.
+
+```{r session-info}
+# Session information
+sessionInfo()
+```
