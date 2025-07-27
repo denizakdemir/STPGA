@@ -58,63 +58,217 @@ subset_ga <- function(P, Candidates, Test, ntoselect,
     warning("The algorithm does not work well with p>ntrain, perhaps use unsupervised dimension reduction on P.")
   }
   
-  # Initialize internal helper functions
-  source_ga_operators()
-  source_evaluation_functions()
+  # Validate inputs
+  validate_matrix_params(P, train = Candidates, test = Test, lambda = lambda)
   
-  # Ridge regression function for internal use
-  ridge_regression <- function(y, x, lambda = lambda) {
-    n <- nrow(x)
-    p <- ncol(x)
-    mindim <- min(p, n)
-    rownames(x) <- NULL
+  # Initialize population
+  if (!is.null(InitPop)) {
+    population <- InitPop
+    if (length(population) < npop) {
+      # Fill remaining slots with random solutions
+      additional_pop <- replicate(npop - length(population), 
+                                 sample(Candidates, ntoselect), 
+                                 simplify = FALSE)
+      population <- c(population, additional_pop)
+    } else if (length(population) > npop) {
+      population <- population[1:npop]
+    }
+  } else {
+    population <- replicate(npop, sample(Candidates, ntoselect), simplify = FALSE)
+  }
+  
+  # Initialize tracking variables
+  fitness_history <- matrix(NA, niterations, 3)
+  colnames(fitness_history) <- c("best", "mean", "worst")
+  
+  generation_stats <- list()
+  tabu_memory <- if (tabu) vector("list", tabumemsize) else NULL
+  
+  best_ever_solution <- NULL
+  best_ever_fitness <- Inf
+  
+  no_improvement_count <- 0
+  convergence_history <- numeric(niterreg)
+  
+  # Create progress bar if verbose
+  if (verbose) {
+    pb <- create_progress_bar(niterations, "GA Evolution")
+  }
+  
+  # Main evolution loop
+  for (generation in 1:niterations) {
     
-    if (p >= n) {
-      # More predictors than observations - use eigendecomposition
-      eigen_decomp <- eigen(crossprod(x) / (n - 1) + lambda * diag(p), symmetric = TRUE)
-      eigenvectors <- eigen_decomp$vectors
-      eigenvalues <- eigen_decomp$values
-      
-      # Compute coefficients
-      beta <- eigenvectors %*% diag(1 / eigenvalues) %*% t(eigenvectors) %*% t(x) %*% y
-      return(beta)
+    # Evaluate population
+    fitness_values <- evaluate_population(
+      population, P, Test, criterion, lambda, C, 
+      K = NULL, Vg = Vg, Ve = Ve, mc.cores = mc.cores
+    )
+    
+    # Track best solution
+    current_best_idx <- which.min(fitness_values)
+    current_best_fitness <- fitness_values[current_best_idx]
+    current_best_solution <- population[[current_best_idx]]
+    
+    # Update global best
+    if (current_best_fitness < best_ever_fitness) {
+      best_ever_fitness <- current_best_fitness
+      best_ever_solution <- current_best_solution
+      no_improvement_count <- 0
     } else {
-      # Standard case - more observations than predictors
-      XtX <- crossprod(x)
-      Xty <- crossprod(x, y)
+      no_improvement_count <- no_improvement_count + 1
+    }
+    
+    # Record fitness statistics
+    fitness_history[generation, "best"] <- current_best_fitness
+    fitness_history[generation, "mean"] <- mean(fitness_values)
+    fitness_history[generation, "worst"] <- max(fitness_values)
+    
+    # Population statistics
+    generation_stats[[generation]] <- compute_population_stats(population, fitness_values)
+    
+    # Adaptive mutation rate
+    if (adaptive_mutation) {
+      diversity <- generation_stats[[generation]]$diversity
+      mutprob <- adaptive_mutation_rate(mutprob, diversity, generation, 
+                                       niterations, min_rate = 0.01, max_rate = 0.95)
+    }
+    
+    # Convergence check
+    convergence_history[((generation - 1) %% niterreg) + 1] <- current_best_fitness
+    
+    if (generation >= minitbefstop && generation > niterreg) {
+      recent_improvement <- max(convergence_history) - min(convergence_history)
+      if (recent_improvement < tolconv) {
+        if (verbose) {
+          message(paste("Convergence achieved at generation", generation))
+        }
+        break
+      }
+    }
+    
+    # Early stopping if no improvement
+    if (no_improvement_count > minitbefstop) {
+      if (verbose) {
+        message(paste("Early stopping at generation", generation, "- no improvement"))
+      }
+      break
+    }
+    
+    # Selection
+    if (selection_method == "tournament") {
+      selected_indices <- tournament_selection(population, fitness_values, 
+                                              tournament_size, nelite)
+    } else if (selection_method == "elite") {
+      selected_indices <- elite_selection(population, fitness_values, nelite)
+    } else { # hybrid
+      elite_indices <- elite_selection(population, fitness_values, nelite %/% 2)
+      tournament_indices <- tournament_selection(population, fitness_values, 
+                                                tournament_size, nelite - length(elite_indices))
+      selected_indices <- c(elite_indices, tournament_indices)
+    }
+    
+    elites <- population[selected_indices]
+    
+    # Update tabu memory
+    if (tabu && generation > 1) {
+      tabu_memory[[(generation - 1) %% tabumemsize + 1]] <- elites
+    }
+    
+    # Generate offspring
+    offspring <- generate_offspring(
+      elites, Candidates, npop - nelite, mutprob, mc.cores, 
+      mutintensity, tabu_memory, ntoselect, crossover_method
+    )
+    
+    # Combine elites and offspring
+    if (keepbest) {
+      population <- c(elites, offspring)
+    } else {
+      population <- offspring
+    }
+    
+    # Diversity preservation
+    if (diversity_preservation) {
+      if (diversity_method %in% c("crowding", "both")) {
+        # Apply crowding replacement
+        offspring_fitness <- evaluate_population(
+          offspring, P, Test, criterion, lambda, C, 
+          K = NULL, Vg = Vg, Ve = Ve, mc.cores = mc.cores
+        )
+        
+        replacement_result <- crowding_replacement(
+          offspring, offspring_fitness, population[1:length(elites)], 
+          fitness_values[selected_indices], crowding_factor
+        )
+        
+        population <- c(replacement_result$population, 
+                       population[(length(elites)+1):length(population)])
+      }
       
-      # Use Cholesky decomposition for numerical stability
-      tryCatch({
-        L <- chol(XtX + lambda * diag(p))
-        beta <- backsolve(L, forwardsolve(t(L), Xty))
-        return(beta)
-      }, error = function(e) {
-        # Fallback to SVD if Cholesky fails
-        svd_result <- svd(x)
-        d <- svd_result$d
-        d_reg <- d^2 + lambda
-        beta <- svd_result$v %*% diag(d / d_reg) %*% t(svd_result$u) %*% y
-        return(beta)
-      })
+      if (diversity_method %in% c("sharing", "both")) {
+        # Apply fitness sharing
+        current_fitness <- evaluate_population(
+          population, P, Test, criterion, lambda, C, 
+          K = NULL, Vg = Vg, Ve = Ve, mc.cores = mc.cores
+        )
+        
+        shared_fitness <- fitness_sharing(current_fitness, population, 
+                                         sharing_radius, alpha = 1)
+        # Use shared fitness for next selection
+        fitness_values <- shared_fitness
+      }
+    }
+    
+    # Plotting
+    if (plotiters && generation %% 10 == 0) {
+      if (plottype == 1) {
+        plot(1:generation, fitness_history[1:generation, "best"], 
+             type = "l", col = "blue", lwd = 2,
+             xlab = "Generation", ylab = "Fitness",
+             main = paste("GA Progress - Generation", generation))
+        lines(1:generation, fitness_history[1:generation, "mean"], col = "red")
+        legend("topright", c("Best", "Mean"), col = c("blue", "red"), lty = 1)
+      }
+    }
+    
+    # Update progress bar
+    if (verbose) {
+      update_progress(pb)
     }
   }
   
-  # Main GA execution logic will be inserted here
-  # This is a placeholder - the actual implementation follows the original logic
-  # but with cleaner organization and the new function names
+  # Finish progress bar
+  if (verbose) {
+    finish_progress(pb)
+  }
   
-  # Return results in standardized format
+  # Final evaluation if needed
+  if (is.null(best_ever_solution)) {
+    final_fitness <- evaluate_population(
+      population, P, Test, criterion, lambda, C, 
+      K = NULL, Vg = Vg, Ve = Ve, mc.cores = mc.cores
+    )
+    best_idx <- which.min(final_fitness)
+    best_ever_solution <- population[[best_idx]]
+    best_ever_fitness <- final_fitness[best_idx]
+  }
+  
+  # Return comprehensive results
   list(
-    best_solution = NULL,  # Best training set found
-    best_fitness = NULL,   # Best fitness value
-    fitness_history = NULL, # Fitness evolution over generations
-    population_stats = NULL, # Population diversity and convergence stats
-    parameters = list(     # Algorithm parameters used
+    best_solution = best_ever_solution,
+    best_fitness = best_ever_fitness,
+    fitness_history = fitness_history[1:generation, , drop = FALSE],
+    population_stats = generation_stats[1:generation],
+    final_population = population,
+    convergence_generation = generation,
+    parameters = list(
       npop = npop,
-      niterations = niterations,
+      niterations = generation,
       criterion = criterion,
       selection_method = selection_method,
-      adaptive_mutation = adaptive_mutation
+      adaptive_mutation = adaptive_mutation,
+      diversity_preservation = diversity_preservation,
+      diversity_method = diversity_method
     )
   )
 }
@@ -135,14 +289,4 @@ subset_ga_single <- function(P, ntoselect, ...) {
   do.call(subset_ga, args)
 }
 
-# Helper function to source operator functions (to be implemented)
-source_ga_operators <- function() {
-  # This will load the operator functions when they're created
-  invisible(NULL)
-}
-
-# Helper function to source evaluation functions (to be implemented)  
-source_evaluation_functions <- function() {
-  # This will load the evaluation functions when they're created
-  invisible(NULL)
-}
+# Helper functions are now implemented inline - no need for sourcing

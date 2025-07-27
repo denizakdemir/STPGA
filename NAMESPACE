@@ -53,6 +53,36 @@ export(safe_matrix_inverse)
 export(matrix_stability_check)
 export(ridge_regression_cv)
 
+# Validation Functions
+export(validate_matrix_params)
+export(validate_kinship_matrix)
+export(validate_variance_components)
+export(check_memory_usage)
+export(get_adaptive_ridge)
+export(check_matrix_dimensions)
+
+# Performance Functions
+export(create_progress_bar)
+export(update_progress)
+export(finish_progress)
+export(chunked_matrix_operation)
+export(block_matrix_mult)
+export(chunked_crossprod)
+export(parallel_apply)
+export(get_optimal_cores)
+export(simple_cache)
+export(clear_cache)
+export(cache_stats)
+
+# Naming Standards
+export(standardize_name)
+export(check_parameter_naming)
+export(standardize_parameters)
+export(get_function_variants)
+export(create_function_alias)
+export(document_parameter)
+export(generate_doc_template)
+
 # Population Evaluation
 export(evaluate_population)
 export(evaluate_population_smart)

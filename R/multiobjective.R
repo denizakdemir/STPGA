@@ -54,7 +54,11 @@ subset_ga_multiobjective <- function(Pcs = NULL, Dist = NULL, Kernel = NULL,
     population <- initial_population
     # Fill remaining slots if needed
     while (length(population) < npop) {
-      population <- c(population, list(sample(candidates, ntoselect)))
+      population <- c(population, list(sample(candidates, ntoselect, replace = FALSE)))
+    }
+    # Truncate if too large
+    if (length(population) > npop) {
+      population <- population[1:npop]
     }
   }
   
@@ -508,8 +512,216 @@ plot_pareto_progress <- function(fitness, criteria, directions, generation, axes
   }
 }
 
+#' Select diverse subset using crowding distance
+#' @param fitness Fitness matrix
+#' @param max_size Maximum number of solutions to select
+#' @return Indices of selected solutions
+select_diverse_subset <- function(fitness, max_size) {
+  n_solutions <- nrow(fitness)
+  
+  if (n_solutions <= max_size) {
+    return(1:n_solutions)
+  }
+  
+  # Calculate crowding distances
+  crowding_distances <- calculate_crowding_distance(fitness)
+  
+  # Select solutions with highest crowding distance
+  selected_indices <- order(crowding_distances, decreasing = TRUE)[1:max_size]
+  
+  return(selected_indices)
+}
+
+#' Compute convergence metrics for multi-objective optimization
+#' @param fitness Archive fitness matrix
+#' @return Vector of convergence metrics
+compute_convergence_metrics <- function(fitness) {
+  if (is.null(fitness) || nrow(fitness) == 0) {
+    return(rep(Inf, ncol(fitness)))
+  }
+  
+  # Return range of each objective as convergence metric
+  apply(fitness, 2, function(x) max(x) - min(x))
+}
+
+#' Extract final Pareto front
+#' @param archive Archive of solutions
+#' @param fitness Archive fitness matrix
+#' @param criteria_types Optimization types
+#' @return List with Pareto solutions and fitness
+extract_pareto_front <- function(archive, fitness, criteria_types) {
+  if (length(archive) == 0) {
+    return(list(solutions = list(), fitness = matrix(NA, 0, length(criteria_types))))
+  }
+  
+  # Find non-dominated solutions one more time
+  non_dominated_indices <- find_non_dominated(fitness, criteria_types)
+  
+  list(
+    solutions = archive[non_dominated_indices],
+    fitness = fitness[non_dominated_indices, , drop = FALSE]
+  )
+}
+
+#' Check convergence based on convergence history
+#' @param convergence_history Matrix of convergence metrics over generations
+#' @param current_generation Current generation number
+#' @param window_size Window size for checking convergence (default: 20)
+#' @param tolerance Convergence tolerance (default: 1e-6)
+#' @return TRUE if converged, FALSE otherwise
+check_convergence <- function(convergence_history, current_generation, 
+                             window_size = 20, tolerance = 1e-6) {
+  
+  if (current_generation < window_size) {
+    return(FALSE)
+  }
+  
+  # Check if convergence metrics have stabilized
+  recent_window <- convergence_history[(current_generation - window_size + 1):current_generation, , drop = FALSE]
+  
+  # Convergence if all objectives show little change
+  for (obj in 1:ncol(recent_window)) {
+    obj_range <- max(recent_window[, obj]) - min(recent_window[, obj])
+    if (obj_range > tolerance) {
+      return(FALSE)
+    }
+  }
+  
+  return(TRUE)
+}
+
+#' Compute generation statistics for multi-objective optimization
+#' @param population Current population
+#' @param fitness Current fitness matrix
+#' @param archive_fitness Archive fitness matrix
+#' @return List with generation statistics
+compute_generation_stats <- function(population, fitness, archive_fitness) {
+  
+  # Population diversity
+  diversity <- calculate_diversity(population)
+  
+  # Hypervolume approximation (for 2D case)
+  hypervolume <- if (ncol(fitness) == 2 && nrow(fitness) > 0) {
+    # Simple hypervolume calculation for 2D
+    sorted_indices <- order(fitness[, 1])
+    sorted_fitness <- fitness[sorted_indices, ]
+    
+    hv <- 0
+    for (i in 1:nrow(sorted_fitness)) {
+      if (i == 1) {
+        width <- sorted_fitness[i, 1]
+      } else {
+        width <- sorted_fitness[i, 1] - sorted_fitness[i-1, 1]
+      }
+      height <- sorted_fitness[i, 2]
+      hv <- hv + width * height
+    }
+    hv
+  } else {
+    NA  # Hypervolume not computed for higher dimensions
+  }
+  
+  list(
+    diversity = diversity,
+    hypervolume = hypervolume,
+    archive_size = if (!is.null(archive_fitness)) nrow(archive_fitness) else 0,
+    population_size = length(population),
+    fitness_ranges = apply(fitness, 2, function(x) max(x) - min(x))
+  )
+}
+
+#' Diversity-preserving selection for environmental selection
+#' @param population Combined population
+#' @param fitness Combined fitness matrix
+#' @param target_size Target population size
+#' @param criteria_types Optimization types
+#' @return Indices of selected solutions
+diversity_preserving_selection <- function(population, fitness, target_size, criteria_types) {
+  
+  n_solutions <- length(population)
+  if (n_solutions <= target_size) {
+    return(1:n_solutions)
+  }
+  
+  # Non-dominated sorting
+  ranks <- non_dominated_sorting(fitness, criteria_types)
+  
+  selected_indices <- integer(0)
+  current_rank <- 1
+  
+  while (length(selected_indices) < target_size && current_rank <= max(ranks)) {
+    rank_indices <- which(ranks == current_rank)
+    
+    if (length(selected_indices) + length(rank_indices) <= target_size) {
+      # Add entire rank
+      selected_indices <- c(selected_indices, rank_indices)
+    } else {
+      # Select most diverse solutions from this rank
+      remaining_slots <- target_size - length(selected_indices)
+      
+      if (length(rank_indices) > 1) {
+        # Use crowding distance for selection
+        rank_fitness <- fitness[rank_indices, , drop = FALSE]
+        crowding_distances <- calculate_crowding_distance(rank_fitness)
+        
+        # Select solutions with highest crowding distance
+        diverse_indices <- rank_indices[order(crowding_distances, decreasing = TRUE)[1:remaining_slots]]
+        selected_indices <- c(selected_indices, diverse_indices)
+      } else {
+        # Only one solution in this rank
+        selected_indices <- c(selected_indices, rank_indices[1])
+      }
+    }
+    
+    current_rank <- current_rank + 1
+  }
+  
+  return(selected_indices)
+}
+
+#' Environmental selection for NSGA-II
+#' @param fitness Combined fitness matrix
+#' @param ranks Dominance ranks
+#' @param target_size Target population size
+#' @return Indices of selected solutions
+environmental_selection <- function(fitness, ranks, target_size) {
+  
+  selected_indices <- integer(0)
+  current_rank <- 1
+  
+  while (length(selected_indices) < target_size && current_rank <= max(ranks)) {
+    rank_indices <- which(ranks == current_rank)
+    
+    if (length(selected_indices) + length(rank_indices) <= target_size) {
+      # Add entire rank
+      selected_indices <- c(selected_indices, rank_indices)
+    } else {
+      # Partial selection based on crowding distance
+      remaining_slots <- target_size - length(selected_indices)
+      
+      if (length(rank_indices) > 1) {
+        rank_fitness <- fitness[rank_indices, , drop = FALSE]
+        crowding_distances <- calculate_crowding_distance(rank_fitness)
+        
+        # Select solutions with highest crowding distance
+        best_crowding <- rank_indices[order(crowding_distances, decreasing = TRUE)[1:remaining_slots]]
+        selected_indices <- c(selected_indices, best_crowding)
+      } else {
+        selected_indices <- c(selected_indices, rank_indices[1])
+      }
+    }
+    
+    current_rank <- current_rank + 1
+  }
+  
+  return(selected_indices)
+}
+
 # Legacy wrapper functions for backward compatibility
 GenAlgForSubsetSelectionMO <- function(...) {
+  .Deprecated("subset_ga_multiobjective", package = "STPGA", 
+              msg = "GenAlgForSubsetSelectionMO is deprecated. Use subset_ga_multiobjective instead.")
+  
   args <- list(...)
   # Convert old parameter names to new ones
   if (!is.null(args$selectionstats)) args$criteria <- args$selectionstats
@@ -519,6 +731,9 @@ GenAlgForSubsetSelectionMO <- function(...) {
 }
 
 GenAlgForSubsetSelectionMONoTest <- function(...) {
+  .Deprecated("subset_ga_multiobjective_single", package = "STPGA", 
+              msg = "GenAlgForSubsetSelectionMONoTest is deprecated. Use subset_ga_multiobjective_single instead.")
+  
   args <- list(...)
   if (!is.null(args$selectionstats)) args$criteria <- args$selectionstats
   if (!is.null(args$selectionstatstypes)) args$criteria_types <- args$selectionstatstypes

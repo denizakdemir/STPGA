@@ -30,8 +30,22 @@ h2_to_variances <- function(h2, total_var = 1) {
 #' 
 #' @param X Matrix to invert
 #' @param lambda Ridge parameter for regularization (default: 1e-6)
+#' @param tol Tolerance for rank detection in SVD (default: 1e-12)
 #' @return Inverse matrix
-safe_matrix_inverse <- function(X, lambda = 1e-6) {
+safe_matrix_inverse <- function(X, lambda = 1e-6, tol = 1e-12) {
+  # Input validation
+  if (!is.matrix(X)) {
+    stop("X must be a matrix")
+  }
+  
+  if (nrow(X) != ncol(X)) {
+    stop("X must be a square matrix")
+  }
+  
+  if (any(!is.finite(X))) {
+    stop("X contains non-finite values")
+  }
+  
   # Add ridge regularization if needed
   if (lambda > 0) {
     X_reg <- X + lambda * diag(nrow(X))
@@ -40,14 +54,40 @@ safe_matrix_inverse <- function(X, lambda = 1e-6) {
   }
   
   # Try Cholesky first (fastest for positive definite)
-  tryCatch({
+  chol_result <- tryCatch({
     L <- chol(X_reg)
-    chol2inv(L)
+    list(success = TRUE, inverse = chol2inv(L))
   }, error = function(e) {
-    # Fall back to SVD for numerical stability
+    list(success = FALSE, error = e$message)
+  })
+  
+  if (chol_result$success) {
+    return(chol_result$inverse)
+  }
+  
+  # Fall back to SVD for numerical stability
+  tryCatch({
     svd_result <- svd(X_reg)
-    d_inv <- ifelse(svd_result$d > 1e-12, 1/svd_result$d, 0)
-    svd_result$v %*% diag(d_inv) %*% t(svd_result$u)
+    
+    # Determine numerical rank
+    max_singular_val <- max(svd_result$d)
+    rank_threshold <- max(tol, max_singular_val * tol)
+    
+    # Only invert non-zero singular values
+    d_inv <- ifelse(svd_result$d > rank_threshold, 1/svd_result$d, 0)
+    
+    # Check if matrix is effectively singular
+    numerical_rank <- sum(svd_result$d > rank_threshold)
+    if (numerical_rank < nrow(X)) {
+      warning("Matrix is rank deficient (rank ", numerical_rank, " < ", nrow(X), 
+              "). Using pseudo-inverse.")
+    }
+    
+    # Compute pseudo-inverse
+    svd_result$v %*% diag(d_inv, nrow = length(d_inv)) %*% t(svd_result$u)
+    
+  }, error = function(e) {
+    stop("Matrix inversion failed even with SVD: ", e$message)
   })
 }
 
@@ -64,13 +104,51 @@ safe_matrix_inverse <- function(X, lambda = 1e-6) {
 #' @param p_test Test prediction matrix (n_test x p). If NULL, uses training set
 #' @param lambda Ridge regularization parameter for numerical stability (default: 1e-6)
 #' @param C Contrast matrix for specific linear combinations (default: NULL)
+#' @param adaptive_ridge Whether to use adaptive ridge parameter (default: TRUE)
 #' @return List containing core matrices and computations
 #' @export
-compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = NULL) {
+compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = NULL, adaptive_ridge = TRUE) {
+  
+  # Input validation
+  if (!is.matrix(p_train)) {
+    p_train <- as.matrix(p_train)
+  }
+  
+  if (!is.null(p_test) && !is.matrix(p_test)) {
+    p_test <- as.matrix(p_test)
+  }
+  
+  # Check dimensions
+  if (nrow(p_train) < 2) {
+    stop("Training set must have at least 2 individuals")
+  }
+  
+  if (ncol(p_train) < 1) {
+    stop("Prediction matrix must have at least 1 variable")
+  }
+  
+  if (!is.null(p_test) && ncol(p_test) != ncol(p_train)) {
+    stop("Test and training matrices must have same number of columns")
+  }
+  
+  # Check for memory usage
+  check_memory_usage(nrow(p_train), ncol(p_train), "matrix_mult")
   
   # Compute XtX with regularization
   xtx <- crossprod(p_train)
-  xtx_reg <- xtx + lambda * diag(ncol(p_train))
+  
+  # Use adaptive ridge if requested
+  if (adaptive_ridge) {
+    adaptive_lambda <- get_adaptive_ridge(xtx)
+    final_lambda <- max(lambda, adaptive_lambda)
+    if (final_lambda > lambda) {
+      message("Using adaptive ridge parameter: ", sprintf("%.2e", final_lambda))
+    }
+  } else {
+    final_lambda <- lambda
+  }
+  
+  xtx_reg <- xtx + final_lambda * diag(ncol(p_train))
   
   # Compute inverse with numerical stability
   inv_xtx_reg <- safe_matrix_inverse(xtx_reg, lambda = 0)  # Already regularized
@@ -80,20 +158,48 @@ compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = N
   # The identity matrix accounts for inherent variability of new observations
   if (!is.null(p_test)) {
     # Test set: PEV includes both model uncertainty AND observation variance
+    # FIXED: Ensure matrices are compatible for addition
     prediction_var <- p_test %*% inv_xtx_reg %*% t(p_test)
-    pev_matrix <- diag(nrow(p_test)) + prediction_var
+    
+    # Verify dimensions match before addition
+    n_test <- nrow(p_test)
+    if (nrow(prediction_var) != n_test || ncol(prediction_var) != n_test) {
+      stop("Internal error: prediction variance matrix has wrong dimensions")
+    }
+    
+    # Create identity matrix of correct size
+    identity_matrix <- diag(n_test)
+    pev_matrix <- identity_matrix + prediction_var
+    
   } else {
     # Training set: leave-one-out cross-validation
     prediction_var <- p_train %*% inv_xtx_reg %*% t(p_train)
-    pev_matrix <- diag(nrow(p_train)) + prediction_var
+    
+    # Verify dimensions
+    n_train <- nrow(p_train)
+    if (nrow(prediction_var) != n_train || ncol(prediction_var) != n_train) {
+      stop("Internal error: prediction variance matrix has wrong dimensions")
+    }
+    
+    # Create identity matrix of correct size
+    identity_matrix <- diag(n_train)
+    pev_matrix <- identity_matrix + prediction_var
   }
   
   # Handle contrast matrix if provided
   contrast_core <- if (!is.null(C)) {
+    # Validate contrast matrix dimensions
+    if (ncol(C) != ncol(p_train)) {
+      stop("Contrast matrix must have same number of columns as prediction matrix")
+    }
+    
     c_inv_xtx_ct <- C %*% inv_xtx_reg %*% t(C)
     
-    if (kappa(c_inv_xtx_ct) > 1e12) {
-      warning("Contrast matrix leads to ill-conditioned system")
+    # Check condition number
+    condition_num <- kappa(c_inv_xtx_ct)
+    if (condition_num > 1e12) {
+      warning("Contrast matrix leads to ill-conditioned system (condition number: ",
+              sprintf("%.2e", condition_num), ")")
     }
     
     safe_matrix_inverse(c_inv_xtx_ct)
@@ -107,7 +213,8 @@ compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = N
     p_train = p_train,
     p_test = p_test,
     contrast_core = contrast_core,
-    C = C
+    C = C,
+    lambda_used = final_lambda
   )
 }
 
@@ -138,6 +245,9 @@ compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = N
 #' 
 #' @export
 a_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
+  # Input validation
+  validate_matrix_params(P, train = train, test = test, lambda = lambda, C = C)
+  
   p_train <- P[train, , drop = FALSE]
   p_test <- if (!is.null(test)) P[test, , drop = FALSE] else NULL
   core <- compute_prediction_core(p_train, p_test, lambda, C)
@@ -377,6 +487,14 @@ cd_mean <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized =
 pev_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL, 
                         Vg = 1, Ve = 1) {
   
+  # Input validation
+  validate_matrix_params(P, K = K, train = train, test = test, lambda = lambda, C = C)
+  validate_variance_components(Vg, Ve)
+  
+  # Check memory usage for mixed model computation
+  all_individuals <- unique(c(train, test))
+  check_memory_usage(length(all_individuals), ncol(P), "eigen")
+  
   # Calculate heritability for documentation
   h2 <- Vg / (Vg + Ve)
   total_var <- Vg + Ve
@@ -424,8 +542,14 @@ pev_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL,
   # CORRECTED: Both terms reduce prediction error variance
   blup_pev <- term1 - term2 - term3
   
+  # Check for numerical issues
+  pev_diag <- diag(blup_pev)
+  if (any(pev_diag < 0)) {
+    warning("Negative PEV values detected. This may indicate numerical issues.")
+  }
+  
   # Return mean of diagonal elements
-  mean(diag(blup_pev))
+  mean(pmax(pev_diag, 0))  # Ensure non-negative
 }
 
 #' Coefficient of Determination (R²) for Mixed Models

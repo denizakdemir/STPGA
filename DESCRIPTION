@@ -13,7 +13,7 @@ Description: Modern genetic algorithms for optimal subset selection in high-dime
 License: GPL-3
 Depends: R (>= 3.5.0), AlgDesign, scales, scatterplot3d, emoa, grDevices, parallel
 Suggests: R.rsp, EMMREML, quadprog, UsingR, glmnet, leaps, Matrix, testthat (>= 3.0.0), 
-    knitr, rmarkdown
+    knitr, rmarkdown, digest, progress
 VignetteBuilder: knitr
 NeedsCompilation: no
 Encoding: UTF-8

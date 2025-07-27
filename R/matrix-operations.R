@@ -20,13 +20,17 @@ compute_amatrix <- function(M, pieces = 10, mc.cores = 1) {
   # Helper function for computing A matrix pieces
   compute_amatrix_piece <- function(M_subset) {
     # Vectorized computation - more efficient than apply
-    pvec <- matrix(colMeans(M_subset + 1) / 2, ncol = 1)
+    pvec <- colMeans(M_subset + 1) / 2
     
-    # More efficient matrix operations
-    M_centered <- M_subset + 1 - 2 * rep(1, nrow(M_subset)) %o% t(pvec)
+    # More efficient matrix operations - fix dimensions
+    n_individuals <- nrow(M_subset)
+    ones_vector <- rep(1, n_individuals)
+    
+    # Center the markers: M_centered = (M + 1) - 2 * 1 * p'
+    M_centered <- (M_subset + 1) - 2 * outer(ones_vector, pvec)
     MMt <- tcrossprod(M_centered)
     
-    return(list(allele_freq = pvec, cross_product = MMt))
+    return(list(allele_freq = matrix(pvec, ncol = 1), cross_product = MMt))
   }
   
   # Helper function for combining A matrix pieces

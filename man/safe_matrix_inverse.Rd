@@ -14,6 +14,8 @@ safe_matrix_inverse(X, lambda = 1e-06, method = "cholesky")
 \item{lambda}{Ridge parameter for regularization (default: 1e-6)}
 
 \item{method}{Inversion method: "cholesky", "svd", "eigen" (default: "cholesky")}
+
+\item{tol}{Tolerance for rank detection in SVD (default: 1e-12)}
 }
 \value{
 Inverse matrix
