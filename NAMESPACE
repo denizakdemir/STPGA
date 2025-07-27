@@ -28,6 +28,13 @@ export(pev_mean_mm)
 export(cd_mean_mm)
 export(criterion)
 export(compute_prediction_core)
+export(h2_to_variances)
+export(safe_matrix_inverse)
+export(pev_mean_mm_h2)
+export(cd_mean_mm_h2)
+export(influence_measure_legacy)
+export(g_optimality)
+export(i_optimality)
 
 # Distance Functions
 export(distance_to_ideal)

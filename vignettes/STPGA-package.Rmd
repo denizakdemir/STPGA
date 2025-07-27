@@ -84,6 +84,16 @@ candidates <- setdiff(all_individuals, test_set)
 cat("Total individuals:", n_total, "\n")
 cat("Test set size:", length(test_set), "\n")
 cat("Candidate pool size:", length(candidates), "\n")
+
+# Extract first 5 principal components for non-mixed model criteria
+# This reduces computational complexity for high-dimensional marker data
+cat("\nExtracting first 5 principal components for non-mixed model criteria...\n")
+pca_result <- prcomp(Wheat.M, center = TRUE, scale. = TRUE)
+Wheat.PC5 <- pca_result$x[, 1:5]
+rownames(Wheat.PC5) <- rownames(Wheat.M)
+
+cat("PC matrix dimensions:", nrow(Wheat.PC5), "x", ncol(Wheat.PC5), "\n")
+cat("Variance explained by first 5 PCs:", sprintf("%.2f%%", 100 * sum(pca_result$sdev[1:5]^2) / sum(pca_result$sdev^2)), "\n")
 ```
 
 ## Classical Optimality Criteria
@@ -96,10 +106,10 @@ train_small <- sample(candidates, 30)
 train_medium <- sample(candidates, 60)
 train_large <- sample(candidates, 100)
 
-# Compute A-optimality (minimizes average prediction variance)
-aopt_small <- a_optimality(train_small, test_set, Wheat.M)
-aopt_medium <- a_optimality(train_medium, test_set, Wheat.M)
-aopt_large <- a_optimality(train_large, test_set, Wheat.M)
+# Compute A-optimality using first 5 PCs (minimizes average prediction variance)
+aopt_small <- a_optimality(train_small, test_set, Wheat.PC5)
+aopt_medium <- a_optimality(train_medium, test_set, Wheat.PC5)
+aopt_large <- a_optimality(train_large, test_set, Wheat.PC5)
 
 cat("A-optimality results:\n")
 cat("Small training (n=30):", sprintf("%.2e", aopt_small), "\n")
@@ -107,20 +117,20 @@ cat("Medium training (n=60):", sprintf("%.2e", aopt_medium), "\n")
 cat("Large training (n=100):", sprintf("%.2e", aopt_large), "\n")
 cat("Improvement (large vs small):", sprintf("%.1fx", aopt_small/aopt_large), "\n")
 
-# D-optimality (minimizes generalized variance)
-dopt_small <- d_optimality(train_small, test_set, Wheat.M)
-dopt_medium <- d_optimality(train_medium, test_set, Wheat.M)
-dopt_large <- d_optimality(train_large, test_set, Wheat.M)
+# D-optimality using first 5 PCs (minimizes generalized variance)
+dopt_small <- d_optimality(train_small, test_set, Wheat.PC5)
+dopt_medium <- d_optimality(train_medium, test_set, Wheat.PC5)
+dopt_large <- d_optimality(train_large, test_set, Wheat.PC5)
 
 cat("\nD-optimality results:\n")
 cat("Small training (n=30):", sprintf("%.2f", dopt_small), "\n")
 cat("Medium training (n=60):", sprintf("%.2f", dopt_medium), "\n")
 cat("Large training (n=100):", sprintf("%.2f", dopt_large), "\n")
 
-# E-optimality (minimizes maximum variance)
-eopt_small <- e_optimality(train_small, test_set, Wheat.M)
-eopt_medium <- e_optimality(train_medium, test_set, Wheat.M)
-eopt_large <- e_optimality(train_large, test_set, Wheat.M)
+# E-optimality using first 5 PCs (minimizes maximum variance)
+eopt_small <- e_optimality(train_small, test_set, Wheat.PC5)
+eopt_medium <- e_optimality(train_medium, test_set, Wheat.PC5)
+eopt_large <- e_optimality(train_large, test_set, Wheat.PC5)
 
 cat("\nE-optimality results:\n")
 cat("Small training (n=30):", sprintf("%.2f", eopt_small), "\n")
@@ -133,17 +143,17 @@ cat("Large training (n=100):", sprintf("%.2f", eopt_large), "\n")
 PEV criteria are particularly relevant for prediction accuracy in genomic selection.
 
 ```{r pev-criteria}
-# Mean PEV
-pev_mean_small <- pev_mean(train_small, test_set, Wheat.M)
-pev_mean_large <- pev_mean(train_large, test_set, Wheat.M)
+# Mean PEV using first 5 PCs
+pev_mean_small <- pev_mean(train_small, test_set, Wheat.PC5)
+pev_mean_large <- pev_mean(train_large, test_set, Wheat.PC5)
 
-# Normalized PEV (scale-invariant)
-pev_norm_small <- pev_mean(train_small, test_set, Wheat.M, normalized = TRUE)
-pev_norm_large <- pev_mean(train_large, test_set, Wheat.M, normalized = TRUE)
+# Normalized PEV using first 5 PCs (scale-invariant)
+pev_norm_small <- pev_mean(train_small, test_set, Wheat.PC5, normalized = TRUE)
+pev_norm_large <- pev_mean(train_large, test_set, Wheat.PC5, normalized = TRUE)
 
-# Maximum PEV (worst-case scenario)
-pev_max_small <- pev_max(train_small, test_set, Wheat.M)
-pev_max_large <- pev_max(train_large, test_set, Wheat.M)
+# Maximum PEV using first 5 PCs (worst-case scenario)
+pev_max_small <- pev_max(train_small, test_set, Wheat.PC5)
+pev_max_large <- pev_max(train_large, test_set, Wheat.PC5)
 
 cat("PEV Results:\n")
 cat("Mean PEV (small):", sprintf("%.2e", pev_mean_small), "\n")
@@ -161,24 +171,24 @@ cat("Max/Mean ratio (small):", sprintf("%.2f", pev_max_small/pev_mean_small), "\
 cat("Max/Mean ratio (large):", sprintf("%.2f", pev_max_large/pev_mean_large), "\n")
 ```
 
-## Cook's Distance Criteria
+## Coefficient of Determination (R²) Criteria
 
-Cook's Distance identifies influential observations that significantly affect model predictions.
+The Coefficient of Determination measures the proportion of variance explained by the model.
 
 ```{r cook-distance}
-# Mean Cook's Distance
-cd_mean_small <- cd_mean(train_small, test_set, Wheat.M)
-cd_mean_large <- cd_mean(train_large, test_set, Wheat.M)
+# Mean Coefficient of Determination (R²) using first 5 PCs
+cd_mean_small <- cd_mean(train_small, test_set, Wheat.PC5)
+cd_mean_large <- cd_mean(train_large, test_set, Wheat.PC5)
 
-# Normalized Cook's Distance
-cd_norm_small <- cd_mean(train_small, test_set, Wheat.M, normalized = TRUE)
-cd_norm_large <- cd_mean(train_large, test_set, Wheat.M, normalized = TRUE)
+# Normalized Coefficient of Determination using first 5 PCs
+cd_norm_small <- cd_mean(train_small, test_set, Wheat.PC5, normalized = TRUE)
+cd_norm_large <- cd_mean(train_large, test_set, Wheat.PC5, normalized = TRUE)
 
-cat("Cook's Distance Results:\n")
+cat("Coefficient of Determination Results:\n")
 cat("Mean CD (small):", sprintf("%.2e", cd_mean_small), "\n")
 cat("Mean CD (large):", sprintf("%.2e", cd_mean_large), "\n")
 
-cat("\nNormalized CD:\n")
+cat("\nNormalized R²:\n")
 cat("Small training:", sprintf("%.6f", cd_norm_small), "\n")
 cat("Large training:", sprintf("%.6f", cd_norm_large), "\n")
 ```
@@ -202,8 +212,10 @@ h2_high <- list(Vg = 0.8, Ve = 0.2)  # High heritability (80%)
 h2_low <- list(Vg = 0.3, Ve = 0.7)   # Low heritability (30%)
 
 # Use smaller dataset for computational efficiency
-P_subset <- Wheat.M[train_mm, 1:100]  # Use only first 100 markers
-K_subset <- Wheat.K[c(train_mm, test_mm), c(train_mm, test_mm)]
+# For mixed models, use subset of individuals but all relationships
+all_mm_individuals <- c(train_mm, test_mm)
+P_subset <- Wheat.M[all_mm_individuals, 1:100]  # Use only first 100 markers
+K_subset <- Wheat.K[all_mm_individuals, all_mm_individuals]
 
 # Compute mixed model criteria with smaller dataset
 pev_mm_high <- pev_mean_mm(train_mm, test_mm, P_subset, K_subset, 
@@ -221,7 +233,7 @@ cat("PEV (h² = 0.8):", sprintf("%.6f", pev_mm_high), "\n")
 cat("PEV (h² = 0.3):", sprintf("%.6f", pev_mm_low), "\n")
 cat("Heritability effect:", sprintf("%.2fx", pev_mm_low/pev_mm_high), "\n")
 
-cat("\nCook's Distance (mixed model):\n")
+cat("\nCoefficient of Determination (mixed model):\n")
 cat("CD (h² = 0.8):", sprintf("%.6f", cd_mm_high), "\n")
 cat("CD (h² = 0.3):", sprintf("%.6f", cd_mm_low), "\n")
 ```
@@ -241,15 +253,15 @@ modern_criteria <- c("a_optimality", "d_optimality", "e_optimality",
 cat("Modern Criteria Results:\n")
 cat("========================\n")
 for (crit in modern_criteria) {
-  value <- criterion(train_unified, test_set, Wheat.M, criterion = crit)
+  value <- criterion(train_unified, test_set, Wheat.PC5, criterion = crit)
   cat(sprintf("%-15s: %12.6e\n", crit, value))
 }
 
 # Test normalized versions
 cat("\nNormalized Criteria:\n")
 cat("===================\n")
-pev_norm <- criterion(train_unified, test_set, Wheat.M, criterion = "pev_mean_normalized")
-cd_norm <- criterion(train_unified, test_set, Wheat.M, criterion = "cd_mean_normalized")
+pev_norm <- criterion(train_unified, test_set, Wheat.PC5, criterion = "pev_mean_normalized")
+cd_norm <- criterion(train_unified, test_set, Wheat.PC5, criterion = "cd_mean_normalized")
 cat(sprintf("%-20s: %12.6f\n", "pev_mean_normalized", pev_norm))
 cat(sprintf("%-20s: %12.6f\n", "cd_mean_normalized", cd_norm))
 
@@ -266,8 +278,8 @@ cat(sprintf("%-15s: %12.6e\n", "cd_mean_mm", cd_mm))
 # Demonstrate legacy compatibility
 cat("\nLegacy Compatibility:\n")
 cat("====================\n")
-aopt_modern <- criterion(train_unified, test_set, Wheat.M, criterion = "a_optimality")
-aopt_legacy <- criterion(train_unified, test_set, Wheat.M, criterion = "AOPT")
+aopt_modern <- criterion(train_unified, test_set, Wheat.PC5, criterion = "a_optimality")
+aopt_legacy <- criterion(train_unified, test_set, Wheat.PC5, criterion = "AOPT")
 cat("Modern a_optimality:", sprintf("%.6e", aopt_modern), "\n")
 cat("Legacy AOPT:        ", sprintf("%.6e", aopt_legacy), "\n")
 cat("Values match:", aopt_modern == aopt_legacy, "\n")
@@ -299,7 +311,7 @@ best_solution <- NULL
 cat("Manual optimization (", n_trials, " random trials):\n")
 for (i in 1:n_trials) {
   trial_solution <- sample(candidates, n_select)
-  trial_fitness <- pev_mean(trial_solution, test_set, Wheat.M, normalized = TRUE)
+  trial_fitness <- pev_mean(trial_solution, test_set, Wheat.PC5, normalized = TRUE)
   
   if (trial_fitness < best_fitness) {
     best_fitness <- trial_fitness
@@ -317,7 +329,7 @@ cat("Best fitness:", sprintf("%.8f", best_fitness), "\n")
 
 # Compare with random selection
 random_selection <- sample(candidates, n_select)
-random_fitness <- pev_mean(random_selection, test_set, Wheat.M, normalized = TRUE)
+random_fitness <- pev_mean(random_selection, test_set, Wheat.PC5, normalized = TRUE)
 improvement <- (random_fitness - best_fitness) / random_fitness * 100
 
 cat("\nComparison with random selection:\n")
@@ -334,7 +346,7 @@ if (n_trials > 0) {
   set.seed(456)
   for (i in 1:n_trials) {
     trial_solution <- sample(candidates, n_select)
-    trial_results[i] <- pev_mean(trial_solution, test_set, Wheat.M, normalized = TRUE)
+    trial_results[i] <- pev_mean(trial_solution, test_set, Wheat.PC5, normalized = TRUE)
   }
   
   # Plot the trials
@@ -378,8 +390,8 @@ cd_values <- numeric(n_solutions)
 
 for (i in 1:n_solutions) {
   solutions[[i]] <- sample(candidates, n_select)
-  pev_values[i] <- pev_mean(solutions[[i]], test_set, Wheat.M, normalized = TRUE)
-  cd_values[i] <- cd_mean(solutions[[i]], test_set, Wheat.M, normalized = TRUE)
+  pev_values[i] <- pev_mean(solutions[[i]], test_set, Wheat.PC5, normalized = TRUE)
+  cd_values[i] <- cd_mean(solutions[[i]], test_set, Wheat.PC5, normalized = TRUE)
 }
 
 cat("Multi-criteria evaluation:\n")
@@ -413,7 +425,7 @@ if (length(pev_values) > 1 && length(cd_values) > 1) {
          pch = 17, col = "red", cex = 1.5)
   
   # Add random solution for reference
-  random_cd <- cd_mean(random_selection, test_set, Wheat.M, normalized = TRUE)
+  random_cd <- cd_mean(random_selection, test_set, Wheat.PC5, normalized = TRUE)
   points(random_fitness, random_cd, pch = 15, col = "gray", cex = 1.5)
   
   # Add labels for a few points
@@ -443,8 +455,8 @@ cat("Lambda\t\tA-optimality\tPEV Mean\n")
 cat("------\t\t------------\t--------\n")
 
 for (lambda in lambda_values) {
-  aopt_ridge <- a_optimality(train_ridge, test_set, Wheat.M, lambda = lambda)
-  pev_ridge <- pev_mean(train_ridge, test_set, Wheat.M, lambda = lambda)
+  aopt_ridge <- a_optimality(train_ridge, test_set, Wheat.PC5, lambda = lambda)
+  pev_ridge <- pev_mean(train_ridge, test_set, Wheat.PC5, lambda = lambda)
   cat(sprintf("%.0e\t\t%.6e\t%.6e\n", lambda, aopt_ridge, pev_ridge))
 }
 ```
@@ -455,15 +467,15 @@ for (lambda in lambda_values) {
 # Demonstrate numerical stability features
 train_stability <- sample(candidates, 80)
 
-# Check matrix conditioning
-P_train <- Wheat.M[train_stability, ]
+# Check matrix conditioning using first 5 PCs
+P_train <- Wheat.PC5[train_stability, ]
 xtx <- crossprod(P_train)
 condition_number <- kappa(xtx)
 
 cat("Matrix Conditioning:\n")
 cat("===================\n")
 cat("Training set size:", length(train_stability), "\n")
-cat("Number of markers:", ncol(Wheat.M), "\n")
+cat("Number of principal components:", ncol(Wheat.PC5), "\n")
 cat("X'X condition number:", sprintf("%.2e", condition_number), "\n")
 
 if (condition_number > 1e12) {
@@ -472,9 +484,9 @@ if (condition_number > 1e12) {
   cat("Matrix is well-conditioned\n")
 }
 
-# Test with extreme case (more predictors than observations)
+# Test with extreme case (very small training set)
 train_extreme <- sample(candidates, 10)  # Very small training set
-P_extreme <- Wheat.M[train_extreme, 1:100]  # Subset of markers
+P_extreme <- Wheat.PC5[train_extreme, ]  # Use all 5 PCs
 xtx_extreme <- crossprod(P_extreme)
 condition_extreme <- kappa(xtx_extreme)
 
@@ -499,7 +511,7 @@ cat("===========================\n")
 set.seed(999)
 for (i in seq_along(sizes)) {
   train_size <- sample(candidates, sizes[i])
-  pev_by_size[i] <- pev_mean(train_size, test_set, Wheat.M, normalized = TRUE)
+  pev_by_size[i] <- pev_mean(train_size, test_set, Wheat.PC5, normalized = TRUE)
 }
 
 # Create recommendations table
