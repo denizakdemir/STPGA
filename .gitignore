@@ -1,0 +1,23 @@
+# R specific
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# R package build files
+*.tar.gz
+*.Rcheck/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Editor specific
+.vscode/
+.idea/
+
+# Temporary files
+*~
+*.swp
+*.bak
