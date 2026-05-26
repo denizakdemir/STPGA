@@ -1,0 +1,10 @@
+^\.claude$
+^\.git$
+^\.gitignore$
+^benchmark_criteria\.R$
+^STPGA.*\.tar\.gz$
+^STPGA\.Rcheck$
+^vignettes/.*\.log$
+^vignettes/.*\.tex$
+^vignettes/.*\.pdf$
+^vignettes/advanced_ga_features\..*$

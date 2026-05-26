@@ -1,18 +1,20 @@
 Package: STPGA
 Type: Package
 Title: Selection of Training Populations by Genetic Algorithm
-Version: 7.0.0
-Date: 2025-07-27
+Version: 7.0.1
+Date: 2026-05-26
 Author: Deniz Akdemir
 Maintainer: Deniz Akdemir <deniz.akdemir.work@gmail.com>
-Description: Modern genetic algorithms for optimal subset selection in high-dimensional prediction problems. 
+Description: Advanced genetic algorithms for optimal subset selection in high-dimensional prediction problems. 
     Provides efficient single and multi-objective optimization for training population selection with 
     comprehensive criteria including A-, D-, E-optimality, prediction error variance (PEV), Cook's distance (CD), 
-    and distance-based measures. Features adaptive mutation, tournament selection, diversity preservation, 
-    and numerically stable matrix operations. Includes both modern clean interfaces and legacy compatibility functions.
+    and distance-based measures. Features multi-criteria convergence detection, restart mechanisms, 
+    rank-based selection with pressure control, adaptive mutation, diversity preservation, and numerically 
+    stable matrix operations. Includes convergence diagnostics, configurable optimization windows, and both 
+    modern clean interfaces with legacy compatibility functions.
 License: GPL-3
 Depends: R (>= 3.5.0), AlgDesign, scales, scatterplot3d, emoa, grDevices, parallel
-Suggests: R.rsp, EMMREML, quadprog, UsingR, glmnet, leaps, Matrix, testthat (>= 3.0.0), 
+Suggests: EMMREML, quadprog, glmnet, leaps, Matrix, testthat (>= 3.0.0), 
     knitr, rmarkdown, digest, progress
 VignetteBuilder: knitr
 NeedsCompilation: no

@@ -18,6 +18,21 @@
 #' @param h2 Heritability (proportion of variance due to genetics)
 #' @param total_var Total variance (default: 1)
 #' @return List with Vg (genetic variance) and Ve (error variance)
+#' 
+#' @examples
+#' # Convert heritability to variance components
+#' h2_values <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+#' 
+#' for (h2 in h2_values) {
+#'   var_comps <- h2_to_variances(h2)
+#'   print(paste("h² =", h2, "-> Vg =", var_comps$Vg, ", Ve =", var_comps$Ve))
+#' }
+#' 
+#' # Example with custom total variance
+#' var_comps_scaled <- h2_to_variances(0.6, total_var = 2.5)
+#' print(paste("h² = 0.6, total_var = 2.5 -> Vg =", var_comps_scaled$Vg, 
+#'             ", Ve =", var_comps_scaled$Ve))
+#' 
 #' @export
 h2_to_variances <- function(h2, total_var = 1) {
   list(
@@ -32,6 +47,29 @@ h2_to_variances <- function(h2, total_var = 1) {
 #' @param lambda Ridge parameter for regularization (default: 1e-6)
 #' @param tol Tolerance for rank detection in SVD (default: 1e-12)
 #' @return Inverse matrix
+#' 
+#' @examples
+#' # Example with well-conditioned matrix
+#' set.seed(123)
+#' X <- matrix(rnorm(25), 5, 5)
+#' X <- t(X) %*% X  # Make positive definite
+#' 
+#' # Safe inversion
+#' X_inv <- safe_matrix_inverse(X)
+#' print("Matrix inversion successful")
+#' print(paste("Condition number:", round(kappa(X), 2)))
+#' 
+#' # Verify inversion
+#' identity_check <- X %*% X_inv
+#' max_error <- max(abs(identity_check - diag(nrow(X))))
+#' print(paste("Maximum error in X * X_inv - I:", max_error))
+#' 
+#' # Example with ill-conditioned matrix (uses ridge regularization)
+#' X_ill <- matrix(c(1, 1, 1, 1.0001), 2, 2)
+#' print(paste("Ill-conditioned matrix condition number:", round(kappa(X_ill), 2)))
+#' 
+#' X_ill_inv <- safe_matrix_inverse(X_ill, lambda = 1e-4)
+#' print("Ill-conditioned matrix inverted with ridge regularization")
 safe_matrix_inverse <- function(X, lambda = 1e-6, tol = 1e-12) {
   # Input validation
   if (!is.matrix(X)) {
@@ -154,7 +192,7 @@ compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = N
   inv_xtx_reg <- safe_matrix_inverse(xtx_reg, lambda = 0)  # Already regularized
   
   # CORRECTED prediction error variance computation
-  # Based on literature: PEV = Var(y - ŷ) = σ²[I + X(X'X)⁻¹X']
+  # Based on literature: PEV = Var(y - y_hat) = sigma^2[I + X(X'X)^(-1)X']
   # The identity matrix accounts for inherent variability of new observations
   if (!is.null(p_test)) {
     # Test set: PEV includes both model uncertainty AND observation variance
@@ -243,6 +281,41 @@ compute_prediction_core <- function(p_train, p_test = NULL, lambda = 1e-6, C = N
 #' @references
 #' Fedorov, V.V. (1972). Theory of Optimal Experiments. Academic Press.
 #' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for faster computation
+#' set.seed(123)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:20]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define candidate and test sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute A-optimality (minimizes average prediction variance)
+#' aopt_value <- a_optimality(train_set, test_set, PC_subset)
+#' print(paste("A-optimality value:", round(aopt_value, 6)))
+#' 
+#' # Compare different training set sizes
+#' small_train <- sample(candidates, 10)
+#' large_train <- sample(candidates, 30)
+#' 
+#' aopt_small <- a_optimality(small_train, test_set, PC_subset)
+#' aopt_large <- a_optimality(large_train, test_set, PC_subset)
+#' 
+#' print(paste("Small training (n=10):", round(aopt_small, 6)))
+#' print(paste("Large training (n=30):", round(aopt_large, 6)))
+#' print(paste("Improvement factor:", round(aopt_small / aopt_large, 2)))
+#' 
 #' @export
 a_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
   # Input validation
@@ -280,6 +353,43 @@ a_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
 #' @references
 #' Kiefer, J. (1959). Optimum experimental designs. Journal of the Royal Statistical Society B.
 #' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(456)
+#' subset_indices <- sample(1:nrow(Wheat.M), 60)
+#' M_subset <- Wheat.M[subset_indices, 1:15]
+#' 
+#' # Extract principal components for D-optimality
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:4]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 10)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 15)
+#' 
+#' # Compute D-optimality (minimizes generalized variance)
+#' dopt_value <- d_optimality(train_set, test_set, PC_subset)
+#' print(paste("D-optimality value:", round(dopt_value, 4)))
+#' 
+#' # Compare with different training sets
+#' train_set2 <- sample(candidates, 15)
+#' dopt_value2 <- d_optimality(train_set2, test_set, PC_subset)
+#' 
+#' print(paste("Training set 1 D-opt:", round(dopt_value, 4)))
+#' print(paste("Training set 2 D-opt:", round(dopt_value2, 4)))
+#' 
+#' if (dopt_value < dopt_value2) {
+#'   print("Training set 1 is better (lower D-optimality)")
+#' } else {
+#'   print("Training set 2 is better (lower D-optimality)")
+#' }
+#' 
 #' @export
 d_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
   p_train <- P[train, , drop = FALSE]
@@ -314,6 +424,38 @@ d_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
 #' 
 #' @references
 #' Atkinson, A.C., Donev, A.N., Tobias, R.D. (2007). Optimum Experimental Designs. Oxford.
+#' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(321)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:20]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute E-optimality (minimizes maximum variance)
+#' eopt_value <- e_optimality(train_set, test_set, PC_subset)
+#' print(paste("E-optimality value:", round(eopt_value, 6)))
+#' 
+#' # Compare with A and D optimality for same training set
+#' aopt_value <- a_optimality(train_set, test_set, PC_subset)
+#' dopt_value <- d_optimality(train_set, test_set, PC_subset)
+#' 
+#' print(paste("A-optimality:", round(aopt_value, 6)))
+#' print(paste("D-optimality:", round(dopt_value, 6)))
+#' print(paste("E-optimality:", round(eopt_value, 6)))
 #' 
 #' @export
 e_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
@@ -353,6 +495,45 @@ e_optimality <- function(train, test = NULL, P, lambda = 1e-6, C = NULL) {
 #' The identity matrix accounts for the inherent variability of new observations.
 #' This is the correct formula according to experimental design literature.
 #' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(789)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:25]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute mean PEV (prediction accuracy measure)
+#' pev_value <- pev_mean(train_set, test_set, PC_subset)
+#' print(paste("Mean PEV:", round(pev_value, 6)))
+#' 
+#' # Compare normalized vs non-normalized
+#' pev_norm <- pev_mean(train_set, test_set, PC_subset, normalized = TRUE)
+#' print(paste("Normalized PEV:", round(pev_norm, 6)))
+#' 
+#' # Effect of training set size on PEV
+#' small_train <- sample(candidates, 10)
+#' large_train <- sample(candidates, 30)
+#' 
+#' pev_small <- pev_mean(small_train, test_set, PC_subset)
+#' pev_large <- pev_mean(large_train, test_set, PC_subset)
+#' 
+#' print(paste("Small training PEV:", round(pev_small, 6)))
+#' print(paste("Large training PEV:", round(pev_large, 6)))
+#' print(paste("PEV reduction factor:", round(pev_small / pev_large, 2)))
+#' 
 #' @export
 pev_mean <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized = FALSE) {
   p_train <- P[train, , drop = FALSE]
@@ -380,6 +561,41 @@ pev_mean <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized 
 #' @param C Contrast matrix for specific linear combinations (default: NULL)
 #' @param normalized Whether to normalize by trace for scale-invariance (default: FALSE)
 #' @return Maximum PEV value (lower is better)
+#' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(654)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:25]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute maximum PEV (worst-case prediction uncertainty)
+#' pev_max_value <- pev_max(train_set, test_set, PC_subset)
+#' pev_mean_value <- pev_mean(train_set, test_set, PC_subset)
+#' 
+#' print(paste("Maximum PEV:", round(pev_max_value, 6)))
+#' print(paste("Mean PEV:", round(pev_mean_value, 6)))
+#' print(paste("Max/Mean ratio:", round(pev_max_value / pev_mean_value, 2)))
+#' 
+#' # Compare normalized versions
+#' pev_max_norm <- pev_max(train_set, test_set, PC_subset, normalized = TRUE)
+#' pev_mean_norm <- pev_mean(train_set, test_set, PC_subset, normalized = TRUE)
+#' 
+#' print(paste("Normalized Max PEV:", round(pev_max_norm, 6)))
+#' print(paste("Normalized Mean PEV:", round(pev_mean_norm, 6)))
 #' 
 #' @export
 pev_max <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized = FALSE) {
@@ -420,7 +636,7 @@ pev_max <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized =
 #' Computes R² as the average leverage from the hat matrix, which represents
 #' the proportion of variance explained by the model in experimental design.
 #' 
-#' Formula: R² = tr(H)/n where H = X(X'X)⁻¹X' is the hat matrix
+#' Formula: R^2 = tr(H)/n where H = X(X'X)^(-1)X' is the hat matrix
 #' 
 #' This is the standard definition used when response data is not available.
 #' 
@@ -437,7 +653,7 @@ cd_mean <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized =
   # Compute R² as average leverage from hat matrix
   # R² = proportion of variance explained = tr(H)/n
   
-  # Leverage values (diagonal of hat matrix H = X(X'X)⁻¹X')
+  # Leverage values (diagonal of hat matrix H = X(X'X)^(-1)X')
   leverage <- if (!is.null(core$p_test)) {
     diag(core$p_test %*% core$inv_xtx_reg %*% t(core$p_test))
   } else {
@@ -475,13 +691,48 @@ cd_mean <- function(train, test = NULL, P, lambda = 1e-6, C = NULL, normalized =
 #' 
 #' @details
 #' Implements the correct BLUP prediction error variance formula from Henderson (1984):
-#' PEV = σ²ᵤ[G₂₂ - G₂₁V₁₁⁻¹G₁₂ - G₂₁V₁₁⁻¹X₁(X₁'V₁₁⁻¹X₁)⁻¹X₁'V₁₁⁻¹G₁₂]
+#' PEV = sigma_u^2[G_22 - G_21 V_11^(-1) G_12 - G_21 V_11^(-1) X_1 (X_1' V_11^(-1) X_1)^(-1) X_1' V_11^(-1) G_12]
 #' 
-#' where V₁₁ = σ²ᵤG₁₁ + σ²ₑI and both correction terms are SUBTRACTED.
+#' where V_11 = sigma_u^2 G_11 + sigma_e^2 I and both correction terms are SUBTRACTED.
 #' 
 #' @references
 #' Henderson, C.R. (1984). Applications of Linear Models in Animal Breeding.
 #' Searle, S.R., Casella, G., McCulloch, C.E. (1992). Variance Components.
+#' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for mixed model demonstration
+#' set.seed(987)
+#' subset_indices <- sample(1:nrow(Wheat.M), 60)
+#' M_subset <- Wheat.M[subset_indices, 1:50]
+#' K_subset <- Wheat.K[subset_indices, subset_indices]
+#' 
+#' # Define train and test sets
+#' all_individuals <- rownames(M_subset)
+#' test_set <- sample(all_individuals, 12)
+#' train_set <- sample(setdiff(all_individuals, test_set), 18)
+#' 
+#' # Mixed model PEV with different heritability scenarios
+#' h2_values <- c(0.2, 0.5, 0.8)
+#' 
+#' print("PEV Mean MM - Different Heritabilities:")
+#' for (h2 in h2_values) {
+#'   var_comps <- h2_to_variances(h2)
+#'   pev_mm <- pev_mean_mm(train_set, test_set, M_subset, K_subset, 
+#'                         Vg = var_comps$Vg, Ve = var_comps$Ve)
+#'   print(paste("h² =", h2, "-> PEV =", round(pev_mm, 6)))
+#' }
+#' 
+#' # Compare with non-mixed model PEV using PCA
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' pev_regular <- pev_mean(train_set, test_set, PC_subset)
+#' 
+#' print(paste("Regular PEV (PCA):", round(pev_regular, 6)))
+#' print("Mixed model accounts for genetic relationships via kinship matrix")
 #' 
 #' @export
 pev_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL, 
@@ -508,31 +759,31 @@ pev_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL,
   }
   
   # Extract relevant matrices according to Henderson's notation
-  p_train <- P[train_idx, , drop = FALSE]        # X₁ (design matrix)
-  k_train <- K[train_idx, train_idx, drop = FALSE]    # G₁₁ 
-  k_test_train <- K[test_idx, train_idx, drop = FALSE]  # G₂₁ 
-  k_test_test <- K[test_idx, test_idx, drop = FALSE]    # G₂₂ 
+  p_train <- P[train_idx, , drop = FALSE]        # X_1 (design matrix)
+  k_train <- K[train_idx, train_idx, drop = FALSE]    # G_11 
+  k_test_train <- K[test_idx, train_idx, drop = FALSE]  # G_21 
+  k_test_test <- K[test_idx, test_idx, drop = FALSE]    # G_22 
   
   n_train <- nrow(p_train)
   
-  # Variance matrix for training set: V₁₁ = σ²ᵤG₁₁ + σ²ₑI
+  # Variance matrix for training set: V_11 = sigma_u^2 * G_11 + sigma_e^2 * I
   v_train <- Vg * k_train + Ve * diag(n_train)
   
-  # Compute V₁₁⁻¹ with numerical stability
+  # Compute V_11^(-1) with numerical stability
   inv_v_train <- safe_matrix_inverse(v_train)
   
-  # Mixed model coefficient matrix: C = X₁'V₁₁⁻¹X₁ + λI
+  # Mixed model coefficient matrix: C = X_1' V_11^(-1) X_1 + lambda * I
   c_matrix <- t(p_train) %*% inv_v_train %*% p_train + lambda * diag(ncol(p_train))
   inv_c_matrix <- safe_matrix_inverse(c_matrix)
   
   # CORRECTED Henderson's BLUP PEV formula:
-  # PEV = σ²ᵤ[G₂₂ - G₂₁V₁₁⁻¹G₁₂ - G₂₁V₁₁⁻¹X₁(X₁'V₁₁⁻¹X₁)⁻¹X₁'V₁₁⁻¹G₁₂]
+  # PEV = sigma_u^2[G_22 - G_21 V_11^(-1) G_12 - G_21 V_11^(-1) X_1 (X_1' V_11^(-1) X_1)^(-1) X_1' V_11^(-1) G_12]
   # CRITICAL: Both correction terms are SUBTRACTED
   
-  # Term 1: σ²ᵤG₂₂ (genetic variance of test individuals)
+  # Term 1: sigma_u^2 * G_22 (genetic variance of test individuals)
   term1 <- Vg * k_test_test
   
-  # Term 2: σ²ᵤG₂₁V₁₁⁻¹G₁₂ (reduction due to genetic covariance with training)
+  # Term 2: sigma_u^2 * G_21 V_11^(-1) G_12 (reduction due to genetic covariance with training)
   term2 <- Vg * k_test_train %*% inv_v_train %*% t(k_test_train)
   
   # Term 3: Fixed effects contribution (reduces PEV further)
@@ -569,13 +820,53 @@ pev_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL,
 #' 
 #' @details
 #' The Coefficient of Determination for BLUP of random effects is defined as:
-#' R² = 1 - PEV/σ²ᵤ
+#' R^2 = 1 - PEV/sigma_u^2
 #' 
 #' This represents the proportion of genetic variance that can be predicted,
 #' or the reliability of breeding value prediction.
 #' 
 #' @references
 #' Henderson, C.R. (1984). Applications of Linear Models in Animal Breeding.
+#' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for mixed model demonstration
+#' set.seed(159)
+#' subset_indices <- sample(1:nrow(Wheat.M), 60)
+#' M_subset <- Wheat.M[subset_indices, 1:50]
+#' K_subset <- Wheat.K[subset_indices, subset_indices]
+#' 
+#' # Define train and test sets
+#' all_individuals <- rownames(M_subset)
+#' test_set <- sample(all_individuals, 12)
+#' train_set <- sample(setdiff(all_individuals, test_set), 18)
+#' 
+#' # Mixed model R² (reliability) with different heritability scenarios
+#' h2_values <- c(0.2, 0.5, 0.8)
+#' 
+#' print("R² (Coefficient of Determination) - Different Heritabilities:")
+#' for (h2 in h2_values) {
+#'   var_comps <- h2_to_variances(h2)
+#'   cd_mm <- cd_mean_mm(train_set, test_set, M_subset, K_subset, 
+#'                       Vg = var_comps$Vg, Ve = var_comps$Ve)
+#'   print(paste("h² =", h2, "-> R² =", round(cd_mm, 4)))
+#' }
+#' 
+#' # Compare training set sizes
+#' small_train <- sample(setdiff(all_individuals, test_set), 10)
+#' large_train <- sample(setdiff(all_individuals, test_set), 25)
+#' 
+#' var_comps <- h2_to_variances(0.5)  # Medium heritability
+#' cd_small <- cd_mean_mm(small_train, test_set, M_subset, K_subset, 
+#'                        Vg = var_comps$Vg, Ve = var_comps$Ve)
+#' cd_large <- cd_mean_mm(large_train, test_set, M_subset, K_subset, 
+#'                        Vg = var_comps$Vg, Ve = var_comps$Ve)
+#' 
+#' print(paste("Small training set (n=10): R² =", round(cd_small, 4)))
+#' print(paste("Large training set (n=25): R² =", round(cd_large, 4)))
+#' print(paste("Improvement with larger set:", round(cd_large - cd_small, 4)))
 #' 
 #' @export
 cd_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL, 
@@ -584,10 +875,10 @@ cd_mean_mm <- function(train, test = NULL, P, K, lambda = 1e-6, C = NULL,
   # Compute PEV using corrected Henderson's formula
   pev_value <- pev_mean_mm(train, test, P, K, lambda, C, Vg, Ve)
   
-  # R² = 1 - PEV/σ²ᵤ (reliability of breeding value prediction)
+  # R^2 = 1 - PEV/sigma_u^2 (reliability of breeding value prediction)
   r_squared <- 1 - (pev_value / Vg)
   
-  # Ensure R² is in valid [0,1] range
+  # Ensure R^2 is in valid [0,1] range
   max(0, min(1, r_squared))
 }
 
@@ -715,13 +1006,48 @@ influence_measure_legacy <- function(train, test = NULL, P, lambda = 1e-6, C = N
 #' @references
 #' Kiefer, J. (1975). Construction and optimality of generalized Youden designs.
 #' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(753)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:20]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute G-optimality (minimizes maximum prediction variance)
+#' gopt_value <- g_optimality(train_set, test_set, PC_subset)
+#' print(paste("G-optimality value:", round(gopt_value, 6)))
+#' 
+#' # Compare with other optimality criteria
+#' aopt <- a_optimality(train_set, test_set, PC_subset)
+#' dopt <- d_optimality(train_set, test_set, PC_subset)
+#' eopt <- e_optimality(train_set, test_set, PC_subset)
+#' 
+#' print("Optimality Comparison:")
+#' print(paste("A-optimality (average variance):", round(aopt, 6)))
+#' print(paste("D-optimality (volume):", round(dopt, 6)))
+#' print(paste("E-optimality (max eigenvalue):", round(eopt, 6)))
+#' print(paste("G-optimality (max hat diagonal):", round(gopt_value, 6)))
+#' 
 #' @export
 g_optimality <- function(train, test = NULL, P, lambda = 1e-6) {
   
   p_train <- P[train, , drop = FALSE]
   p_test <- if (!is.null(test)) P[test, , drop = FALSE] else p_train
   
-  # Compute (X'X)⁻¹
+  # Compute (X'X)^(-1)
   xtx <- crossprod(p_train)
   xtx_reg <- xtx + lambda * diag(ncol(p_train))
   inv_xtx <- safe_matrix_inverse(xtx_reg, lambda = 0)
@@ -747,13 +1073,53 @@ g_optimality <- function(train, test = NULL, P, lambda = 1e-6) {
 #' @references
 #' Fedorov, V.V. (1972). Theory of Optimal Experiments.
 #' 
+#' @examples
+#' # Load wheat genomic data
+#' data(WheatData)
+#' 
+#' # Create a subset for demonstration
+#' set.seed(951)
+#' subset_indices <- sample(1:nrow(Wheat.M), 80)
+#' M_subset <- Wheat.M[subset_indices, 1:20]
+#' 
+#' # Extract principal components
+#' pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+#' PC_subset <- pca_result$x[, 1:5]
+#' rownames(PC_subset) <- rownames(M_subset)
+#' 
+#' # Define sets
+#' all_individuals <- rownames(PC_subset)
+#' test_set <- sample(all_individuals, 15)
+#' candidates <- setdiff(all_individuals, test_set)
+#' train_set <- sample(candidates, 20)
+#' 
+#' # Compute I-optimality (average prediction variance over design space)
+#' iopt_value <- i_optimality(train_set, test_set, PC_subset)
+#' print(paste("I-optimality value:", round(iopt_value, 6)))
+#' 
+#' # Compare I-optimality with A-optimality (both are average-based)
+#' aopt_value <- a_optimality(train_set, test_set, PC_subset)
+#' print(paste("A-optimality (parameter space):", round(aopt_value, 6)))
+#' print(paste("I-optimality (design space):", round(iopt_value, 6)))
+#' 
+#' # Test different training set sizes
+#' small_train <- sample(candidates, 12)
+#' large_train <- sample(candidates, 28)
+#' 
+#' iopt_small <- i_optimality(small_train, test_set, PC_subset)
+#' iopt_large <- i_optimality(large_train, test_set, PC_subset)
+#' 
+#' print(paste("Small training (n=12):", round(iopt_small, 6)))
+#' print(paste("Large training (n=28):", round(iopt_large, 6)))
+#' print(paste("Improvement factor:", round(iopt_small / iopt_large, 2)))
+#' 
 #' @export
 i_optimality <- function(train, test = NULL, P, lambda = 1e-6) {
   
   p_train <- P[train, , drop = FALSE]
   p_test <- if (!is.null(test)) P[test, , drop = FALSE] else p_train
   
-  # Compute (X'X)⁻¹
+  # Compute (X'X)^(-1)
   xtx <- crossprod(p_train)
   xtx_reg <- xtx + lambda * diag(ncol(p_train))
   inv_xtx <- safe_matrix_inverse(xtx_reg, lambda = 0)
@@ -849,6 +1215,12 @@ criterion <- function(train, test = NULL, P, lambda = 1e-6, C = NULL,
     "cd_mean" = cd_mean(train, test, P, lambda, C, normalized = FALSE),
     "cd_mean_normalized" = cd_mean(train, test, P, lambda, C, normalized = TRUE),
     
+    # Distance-based criteria (P must be a square distance matrix with individual names as row/col names)
+    "max_to_test"      = distance_train_to_test_max(train, test, P, lambda, C),
+    "mean_to_test"     = distance_train_to_test_mean(train, test, P, lambda, C),
+    "neg_min_internal" = distance_internal_min(train, test, P, lambda, C),
+    "neg_mean_internal"= distance_internal_mean(train, test, P, lambda, C),
+
     # Legacy support for old names
     "AOPT" = a_optimality(train, test, P, lambda, C),
     "DOPT" = d_optimality(train, test, P, lambda, C),
