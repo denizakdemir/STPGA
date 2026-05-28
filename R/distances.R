@@ -2,6 +2,33 @@
 #' @description Distance-based criteria and utilities for subset selection
 #' @author Deniz Akdemir
 
+as_distance_matrix <- function(distance_matrix, train = NULL, test = NULL) {
+  if (missing(distance_matrix) || !is.matrix(distance_matrix) ||
+      nrow(distance_matrix) == 0 || ncol(distance_matrix) == 0) {
+    stop("distance_matrix must be a non-empty matrix")
+  }
+  
+  needed <- unique(c(train, test))
+  is_named_square <- nrow(distance_matrix) == ncol(distance_matrix) &&
+    !is.null(rownames(distance_matrix)) &&
+    !is.null(colnames(distance_matrix))
+  
+  if (is_named_square) {
+    return(distance_matrix)
+  }
+  
+  if (is.null(rownames(distance_matrix))) {
+    stop("Coordinate matrices used for distance criteria must have row names")
+  }
+  
+  if (length(needed) > 0 && !all(needed %in% rownames(distance_matrix))) {
+    missing_individuals <- setdiff(needed, rownames(distance_matrix))
+    stop("Distance input missing individuals: ", paste(missing_individuals, collapse = ", "))
+  }
+  
+  as.matrix(stats::dist(distance_matrix))
+}
+
 #' Distance to ideal point calculation
 #' @param X Matrix of solutions (rows) by objectives (columns)
 #' @param method Distance method: "euclidean", "manhattan", "chebyshev" (default: "euclidean")
@@ -72,9 +99,16 @@ distance_to_ideal <- function(X, method = "euclidean", handle_zeros = "warning")
 #' @return Maximum distance value
 distance_train_to_test_max <- function(train, test, distance_matrix, lambda = NULL, C = NULL) {
   
-  # Input validation
+  distance_matrix <- as_distance_matrix(distance_matrix, train, test)
+  
   if (length(train) == 0 || length(test) == 0) {
     return(Inf)  # Infinite distance for empty sets
+  }
+  
+  missing_train <- setdiff(train, rownames(distance_matrix))
+  missing_test <- setdiff(test, colnames(distance_matrix))
+  if (length(missing_train) > 0 || length(missing_test) > 0) {
+    warning("Some individuals were not found in distance matrix")
   }
   
   # Extract submatrix efficiently
@@ -87,7 +121,8 @@ distance_train_to_test_max <- function(train, test, distance_matrix, lambda = NU
   }
   
   sub_matrix <- distance_matrix[train_idx, test_idx, drop = FALSE]
-  return(max(sub_matrix))
+  nearest_train_distances <- apply(sub_matrix, 2, min)
+  return(max(nearest_train_distances))
 }
 
 #' Mean distance from training to test set
@@ -99,9 +134,16 @@ distance_train_to_test_max <- function(train, test, distance_matrix, lambda = NU
 #' @return Mean distance value
 distance_train_to_test_mean <- function(train, test, distance_matrix, lambda = NULL, C = NULL) {
   
-  # Input validation
+  distance_matrix <- as_distance_matrix(distance_matrix, train, test)
+  
   if (length(train) == 0 || length(test) == 0) {
     return(Inf)
+  }
+  
+  missing_train <- setdiff(train, rownames(distance_matrix))
+  missing_test <- setdiff(test, colnames(distance_matrix))
+  if (length(missing_train) > 0 || length(missing_test) > 0) {
+    warning("Some individuals were not found in distance matrix")
   }
   
   train_idx <- rownames(distance_matrix) %in% train
@@ -113,7 +155,8 @@ distance_train_to_test_mean <- function(train, test, distance_matrix, lambda = N
   }
   
   sub_matrix <- distance_matrix[train_idx, test_idx, drop = FALSE]
-  return(mean(sub_matrix))
+  nearest_train_distances <- apply(sub_matrix, 2, min)
+  return(mean(nearest_train_distances))
 }
 
 #' Negative minimum distance within training set
@@ -128,6 +171,8 @@ distance_internal_min <- function(train, test = NULL, distance_matrix, lambda = 
   if (length(train) < 2) {
     return(0)  # No internal distances with < 2 individuals
   }
+  
+  distance_matrix <- as_distance_matrix(distance_matrix, train)
   
   train_idx <- rownames(distance_matrix) %in% train
   if (sum(train_idx) < 2) {
@@ -159,6 +204,8 @@ distance_internal_mean <- function(train, test = NULL, distance_matrix, lambda =
   if (length(train) < 2) {
     return(0)
   }
+  
+  distance_matrix <- as_distance_matrix(distance_matrix, train)
   
   train_idx <- rownames(distance_matrix) %in% train
   if (sum(train_idx) < 2) {

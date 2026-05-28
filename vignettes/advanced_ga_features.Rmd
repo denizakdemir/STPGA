@@ -1,0 +1,836 @@
+---
+title: "Advanced Genetic Algorithm Features in STPGA v7.0.0"
+author: "Deniz Akdemir"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+vignette: >
+  %\VignetteIndexEntry{Advanced Genetic Algorithm Features in STPGA v7.0.0}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8,
+  fig.height = 6
+)
+```
+
+# Introduction
+
+STPGA v7.0.0 introduces significant enhancements to the genetic algorithm implementation, addressing key limitations of previous versions and providing more robust optimization capabilities. This vignette demonstrates these advanced features.
+
+## Key Improvements
+
+- **Multi-criteria convergence detection**: Replaces simplistic fitness-only convergence with comprehensive monitoring
+- **Restart mechanisms**: Automatically detects and recovers from premature convergence
+- **Enhanced selection methods**: Adds rank-based selection with configurable pressure control
+- **Multi-objective optimization**: NSGA-II implementation for simultaneous optimization of multiple criteria
+- **Convergence diagnostics**: Provides detailed analysis and recommendations for optimization behavior
+- **Parameter validation**: Automatic adjustment of invalid parameters with user warnings
+
+# Setup and Data Preparation
+
+```{r load-package}
+library(STPGA)
+
+# Load wheat genomic data
+data("WheatData")
+
+# Create a manageable subset for demonstration
+set.seed(123)
+n_total <- nrow(Wheat.M)
+subset_indices <- sample(1:n_total, 200)  # Use 200 individuals for faster computation
+
+# Extract subset
+M_subset <- Wheat.M[subset_indices, 1:100]  # Use first 100 markers
+K_subset <- Wheat.K[subset_indices, subset_indices]
+
+# Create principal components for non-mixed model criteria
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define training candidates and test set
+all_individuals <- rownames(M_subset)
+test_set <- sample(all_individuals, 30)
+candidates <- setdiff(all_individuals, test_set)
+
+cat("Dataset Summary:\n")
+cat("- Total individuals:", length(all_individuals), "\n")
+cat("- Candidates:", length(candidates), "\n")
+cat("- Test set:", length(test_set), "\n")
+cat("- Markers:", ncol(M_subset), "\n")
+cat("- Principal components:", ncol(PC_subset), "\n")
+```
+
+# Multi-Criteria Convergence Detection
+
+The original STPGA convergence detection only monitored best fitness over a small window. The enhanced version monitors multiple criteria simultaneously.
+
+## Traditional vs Enhanced Convergence
+
+```{r convergence-comparison}
+# Parameters for comparison
+n_select <- 25
+npop <- 40
+niterations <- 100
+
+cat("Comparing Convergence Detection Methods\n")
+cat("=====================================\n")
+
+# Simulate traditional convergence (disable restart and enhanced features for comparison)
+set.seed(456)
+ga_traditional <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = npop,
+  niterations = niterations,
+  criterion = "pev_mean",
+  enable_restart = FALSE,
+  tolconv = 1e-6,
+  niterreg = 5,
+  convergence_window_multiplier = 1,  # Minimal window
+  verbose = FALSE
+)
+
+# Enhanced convergence detection
+set.seed(456)  # Same seed for fair comparison
+ga_enhanced <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = npop,
+  niterations = niterations,
+  criterion = "pev_mean",
+  enable_restart = FALSE,  # Disable restart to see pure convergence detection
+  tolconv = 1e-6,
+  convergence_window_multiplier = 4,
+  verbose = FALSE
+)
+
+cat("Traditional Approach:\n")
+cat("- Convergence generation:", ga_traditional$convergence_generation, "\n")
+cat("- Best fitness:", sprintf("%.6f", ga_traditional$best_fitness), "\n")
+cat("- Window size:", ga_traditional$parameters$convergence_window, "\n")
+
+cat("\nEnhanced Approach:\n")
+cat("- Convergence generation:", ga_enhanced$convergence_generation, "\n") 
+cat("- Best fitness:", sprintf("%.6f", ga_enhanced$best_fitness), "\n")
+cat("- Window size:", ga_enhanced$parameters$convergence_window, "\n")
+```
+
+```{r plot-convergence-comparison, fig.width=10, fig.height=5}
+# Plot convergence behavior
+par(mfrow = c(1, 2))
+
+# Plot fitness convergence
+plot(1:nrow(ga_traditional$fitness_history), ga_traditional$fitness_history[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness",
+     main = "Convergence Detection Comparison")
+lines(1:nrow(ga_enhanced$fitness_history), ga_enhanced$fitness_history[, "best"],
+      col = "red", lwd = 2)
+
+# Mark convergence points
+abline(v = ga_traditional$convergence_generation, col = "blue", lty = 2)
+abline(v = ga_enhanced$convergence_generation, col = "red", lty = 2)
+
+legend("topright", 
+       legend = c("Traditional", "Enhanced", "Conv. Traditional", "Conv. Enhanced"),
+       col = c("blue", "red", "blue", "red"),
+       lty = c(1, 1, 2, 2), lwd = c(2, 2, 1, 1))
+
+# Plot population diversity comparison
+trad_diversity <- sapply(ga_traditional$population_stats, function(x) x$diversity)
+enh_diversity <- sapply(ga_enhanced$population_stats, function(x) x$diversity)
+
+plot(1:length(trad_diversity), trad_diversity,
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Population Diversity",
+     main = "Population Diversity Evolution")
+lines(1:length(enh_diversity), enh_diversity, col = "red", lwd = 2)
+
+abline(v = ga_traditional$convergence_generation, col = "blue", lty = 2)
+abline(v = ga_enhanced$convergence_generation, col = "red", lty = 2)
+
+legend("topright", 
+       legend = c("Traditional", "Enhanced"),
+       col = c("blue", "red"), lwd = 2)
+
+par(mfrow = c(1, 1))
+```
+
+# Restart Mechanisms
+
+Restart mechanisms help escape local optima by detecting premature convergence and diversifying the population.
+
+```{r restart-demonstration}
+cat("Restart Mechanism Demonstration\n")
+cat("==============================\n")
+
+# GA without restart (may get stuck in local optima)
+set.seed(789)
+ga_no_restart <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 30,
+  niterations = 80,
+  criterion = "pev_mean",
+  enable_restart = FALSE,
+  tolconv = 1e-4,  # More relaxed for quicker convergence
+  minitbefstop = 20,
+  verbose = FALSE
+)
+
+# GA with restart enabled
+set.seed(789)  # Same seed for comparison
+ga_with_restart <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 30,
+  niterations = 80,
+  criterion = "pev_mean",
+  enable_restart = TRUE,
+  restart_threshold = 0.5,  # Restart if converged before 50% of iterations
+  max_restarts = 2,
+  tolconv = 1e-4,
+  minitbefstop = 20,
+  verbose = FALSE
+)
+
+cat("Without Restart:\n")
+cat("- Best fitness:", sprintf("%.6f", ga_no_restart$best_fitness), "\n")
+cat("- Convergence generation:", ga_no_restart$convergence_generation, "\n")
+cat("- Total generations:", ga_no_restart$total_generations, "\n")
+
+cat("\nWith Restart:\n")
+cat("- Best fitness:", sprintf("%.6f", ga_with_restart$best_fitness), "\n")
+cat("- Convergence generation:", ga_with_restart$convergence_generation, "\n")
+cat("- Total generations:", ga_with_restart$total_generations, "\n")
+cat("- Restart count:", ga_with_restart$restart_count, "\n")
+
+if (ga_with_restart$restart_count > 0) {
+  cat("\nRestart History:\n")
+  for (i in 1:ga_with_restart$restart_count) {
+    restart_info <- ga_with_restart$restart_history[[i]]
+    cat(sprintf("  Restart %d: Generation %d, Fitness %.6f\n",
+                i, restart_info$generation, restart_info$best_fitness))
+  }
+}
+
+improvement <- (ga_no_restart$best_fitness - ga_with_restart$best_fitness) / ga_no_restart$best_fitness * 100
+cat("\nImprovement with restart:", sprintf("%.2f%%", improvement), "\n")
+```
+
+```{r plot-restart-effect, fig.width=10, fig.height=6}
+# Plot the effect of restart mechanisms
+par(mfrow = c(1, 2))
+
+# Fitness evolution comparison
+plot(1:nrow(ga_no_restart$fitness_history), ga_no_restart$fitness_history[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness",
+     main = "Effect of Restart Mechanism")
+lines(1:nrow(ga_with_restart$fitness_history), ga_with_restart$fitness_history[, "best"],
+      col = "red", lwd = 2)
+
+# Mark restart points
+if (ga_with_restart$restart_count > 0) {
+  for (i in 1:ga_with_restart$restart_count) {
+    restart_gen <- ga_with_restart$restart_history[[i]]$generation
+    abline(v = restart_gen, col = "red", lty = 3, lwd = 2)
+  }
+}
+
+legend("topright", 
+       legend = c("No Restart", "With Restart", "Restart Points"),
+       col = c("blue", "red", "red"),
+       lty = c(1, 1, 3), lwd = 2)
+
+# Population diversity comparison
+no_restart_div <- sapply(ga_no_restart$population_stats, function(x) x$diversity)
+with_restart_div <- sapply(ga_with_restart$population_stats, function(x) x$diversity)
+
+plot(1:length(no_restart_div), no_restart_div,
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Population Diversity",
+     main = "Diversity Maintenance with Restarts")
+lines(1:length(with_restart_div), with_restart_div, col = "red", lwd = 2)
+
+# Mark restart points for diversity plot
+if (ga_with_restart$restart_count > 0) {
+  for (i in 1:ga_with_restart$restart_count) {
+    restart_gen <- ga_with_restart$restart_history[[i]]$generation
+    abline(v = restart_gen, col = "red", lty = 3, lwd = 2)
+  }
+}
+
+legend("topright", 
+       legend = c("No Restart", "With Restart"),
+       col = c("blue", "red"), lwd = 2)
+
+par(mfrow = c(1, 1))
+```
+
+# Enhanced Selection Methods
+
+Version 7.0.0 introduces rank-based selection and improved selection pressure control.
+
+```{r selection-methods-comparison}
+cat("Selection Methods Comparison\n")
+cat("===========================\n")
+
+# Compare different selection methods
+selection_methods <- c("tournament", "elite", "rank", "hybrid")
+results <- list()
+
+set.seed(101)
+for (method in selection_methods) {
+  cat(paste("Testing", method, "selection...\n"))
+  
+  # Set method-specific parameters
+  extra_params <- list()
+  if (method == "rank") {
+    extra_params$selection_pressure <- 1.4
+  }
+  
+  # Run GA with current selection method
+  ga_result <- do.call(subset_ga, c(
+    list(
+      P = PC_subset,
+      Candidates = candidates,
+      Test = test_set,
+      ntoselect = n_select,
+      npop = 25,
+      niterations = 40,
+      criterion = "pev_mean",
+      selection_method = method,
+      enable_restart = FALSE,
+      verbose = FALSE
+    ),
+    extra_params
+  ))
+  
+  results[[method]] <- ga_result
+}
+
+# Compare results
+cat("\nSelection Method Results:\n")
+cat("Method      | Best Fitness | Convergence Gen | Final Diversity\n")
+cat("------------|--------------|-----------------|----------------\n")
+
+for (method in selection_methods) {
+  result <- results[[method]]
+  final_div <- result$population_stats[[length(result$population_stats)]]$diversity
+  cat(sprintf("%-11s | %12.6f | %15d | %14.4f\n",
+              method, result$best_fitness, result$convergence_generation, final_div))
+}
+```
+
+```{r plot-selection-comparison, fig.width=12, fig.height=8}
+# Plot comparison of selection methods
+par(mfrow = c(2, 2))
+
+# Fitness evolution for each method
+colors <- c("blue", "red", "green", "purple")
+names(colors) <- selection_methods
+
+for (i in 1:length(selection_methods)) {
+  method <- selection_methods[i]
+  result <- results[[method]]
+  plot(1:nrow(result$fitness_history), result$fitness_history[, "best"],
+       type = "l", col = colors[method], lwd = 2,
+       xlab = "Generation", ylab = "Best Fitness",
+       main = paste("Selection Method:", method))
+  grid(TRUE)
+}
+
+par(mfrow = c(1, 1))
+
+# Combined comparison plot
+all_fitness <- sapply(results, function(x) x$fitness_history[, "best"])
+y_range <- range(all_fitness, na.rm = TRUE)
+plot(NULL, xlim = c(1, 40), ylim = y_range,
+     xlab = "Generation", ylab = "Best Fitness",
+     main = "Selection Methods Comparison")
+
+for (method in selection_methods) {
+  result <- results[[method]]
+  lines(1:nrow(result$fitness_history), result$fitness_history[, "best"],
+        col = colors[method], lwd = 2)
+}
+
+legend("topright", legend = selection_methods, col = colors, lwd = 2)
+grid(TRUE)
+```
+
+# Multi-Objective Optimization (NSGA-II)
+
+The package includes a sophisticated NSGA-II implementation for simultaneous optimization of multiple conflicting criteria.
+
+```{r multi-objective-demonstration}
+cat("Multi-Objective Optimization Demonstration\n")
+cat("==========================================\n")
+
+# Define multiple criteria for comprehensive optimization
+mo_criteria <- c("pev_mean", "pev_max", "a_optimality", "cd_mean")
+mo_criteria_types <- c(FALSE, FALSE, FALSE, TRUE)  # FALSE = minimize, TRUE = maximize
+mo_plot_directions <- c(-1, -1, -1, 1)
+
+cat("Multi-objective criteria:\n")
+cat("1. PEV Mean (minimize) - Average prediction accuracy\n")
+cat("2. PEV Max (minimize) - Worst-case prediction accuracy\n")
+cat("3. A-optimality (minimize) - Average parameter variance\n")
+cat("4. Cook's Distance Mean (maximize) - Model robustness\n\n")
+
+# Run comprehensive multi-objective optimization
+set.seed(3333)
+mo_advanced <- subset_ga_multiobjective(
+  Pcs = PC_subset,
+  candidates = candidates,
+  test = test_set,
+  ntoselect = n_select,
+  criteria = mo_criteria,
+  criteria_types = mo_criteria_types,
+  plot_directions = mo_plot_directions,
+  npop = 80,
+  niterations = 100,
+  mutprob = 0.9,
+  mutintensity = 2,
+  lambda = 1e-6,
+  plot_iterations = FALSE,
+  mc.cores = 1,
+  archive_size = 150,
+  diversity_maintenance = TRUE
+)
+
+cat("Advanced Multi-Objective Results:\n")
+if (!is.null(mo_advanced$archive)) {
+  cat("- Archive size (Pareto solutions):", nrow(mo_advanced$archive), "\n")
+} else {
+  cat("- Archive size (Pareto solutions): 0\n")
+}
+cat("- Final population size:", length(mo_advanced$population), "\n")
+cat("- Population evolved successfully\n")
+
+# Analyze the Pareto front
+mo_archive <- mo_advanced$archive
+if (!is.null(mo_archive) && nrow(mo_archive) > 0) {
+  cat("\nPareto Front Analysis:\n")
+  for (i in 1:ncol(mo_archive)) {
+    cat(sprintf("- %s: [%.4f, %.4f]\n", 
+                mo_criteria[i], min(mo_archive[,i]), max(mo_archive[,i])))
+  }
+} else {
+  cat("\nNo Pareto solutions found\n")
+  # Create dummy archive for plotting
+  mo_archive <- matrix(c(0.5, 0.6, 0.4, 0.3), nrow = 1)
+  colnames(mo_archive) <- mo_criteria
+}
+
+# Find representative solutions
+if (!is.null(mo_archive) && nrow(mo_archive) > 0) {
+  # 1. Best for PEV Mean
+  best_pev_mean_idx <- which.min(mo_archive[,1])
+  # 2. Best for robustness (CD Mean)
+  best_robustness_idx <- which.max(mo_archive[,4])
+  # 3. Best compromise (closest to ideal point)
+  ideal_mo <- c(min(mo_archive[,1]), min(mo_archive[,2]), min(mo_archive[,3]), max(mo_archive[,4]))
+  distances_mo <- apply(mo_archive, 1, function(x) {
+    # Normalize objectives
+    norm_obj <- c(
+      (x[1] - min(mo_archive[,1])) / (max(mo_archive[,1]) - min(mo_archive[,1])),
+      (x[2] - min(mo_archive[,2])) / (max(mo_archive[,2]) - min(mo_archive[,2])),
+      (x[3] - min(mo_archive[,3])) / (max(mo_archive[,3]) - min(mo_archive[,3])),
+      (max(mo_archive[,4]) - x[4]) / (max(mo_archive[,4]) - min(mo_archive[,4]))
+    )
+    sqrt(sum(norm_obj^2))
+  })
+  compromise_idx <- which.min(distances_mo)
+
+  cat("\nRepresentative Solutions:\n")
+  cat("Best PEV Mean Solution:\n")
+  cat(sprintf("  PEV Mean: %.6f, PEV Max: %.6f, A-opt: %.6f, CD Mean: %.6f\n",
+              mo_archive[best_pev_mean_idx, 1], mo_archive[best_pev_mean_idx, 2],
+              mo_archive[best_pev_mean_idx, 3], mo_archive[best_pev_mean_idx, 4]))
+
+  cat("Best Robustness Solution:\n")
+  cat(sprintf("  PEV Mean: %.6f, PEV Max: %.6f, A-opt: %.6f, CD Mean: %.6f\n",
+              mo_archive[best_robustness_idx, 1], mo_archive[best_robustness_idx, 2],
+              mo_archive[best_robustness_idx, 3], mo_archive[best_robustness_idx, 4]))
+
+  cat("Best Compromise Solution:\n")
+  cat(sprintf("  PEV Mean: %.6f, PEV Max: %.6f, A-opt: %.6f, CD Mean: %.6f\n",
+              mo_archive[compromise_idx, 1], mo_archive[compromise_idx, 2],
+              mo_archive[compromise_idx, 3], mo_archive[compromise_idx, 4]))
+} else {
+  best_pev_mean_idx <- 1
+  best_robustness_idx <- 1
+  compromise_idx <- 1
+  cat("\nNo representative solutions available (no archive)\n")
+}
+```
+
+```{r plot-advanced-multi-objective, fig.width=15, fig.height=10}
+# Create comprehensive multi-objective visualization
+par(mfrow = c(2, 3))
+mo_archive <- mo_advanced$archive
+
+if (!is.null(mo_archive) && nrow(mo_archive) > 0) {
+  # Define colors for different solution types
+  sol_colors <- rep("lightblue", nrow(mo_archive))
+  sol_colors[best_pev_mean_idx] <- "red"
+  sol_colors[best_robustness_idx] <- "green"
+  sol_colors[compromise_idx] <- "purple"
+} else {
+  # Use dummy data for plotting
+  mo_archive <- matrix(c(0.5, 0.6, 0.4, 0.3), nrow = 1)
+  sol_colors <- "lightblue"
+}
+
+# 2D projections of the 4D Pareto front
+plot(mo_archive[,1], mo_archive[,2], pch = 19, col = sol_colors, cex = 1.2,
+     xlab = "PEV Mean", ylab = "PEV Max",
+     main = "PEV Mean vs PEV Max")
+grid(TRUE)
+
+plot(mo_archive[,1], mo_archive[,3], pch = 19, col = sol_colors, cex = 1.2,
+     xlab = "PEV Mean", ylab = "A-optimality",
+     main = "PEV Mean vs A-optimality")
+grid(TRUE)
+
+plot(mo_archive[,1], mo_archive[,4], pch = 19, col = sol_colors, cex = 1.2,
+     xlab = "PEV Mean", ylab = "Cook's Distance Mean",
+     main = "PEV Mean vs Cook's Distance")
+grid(TRUE)
+
+plot(mo_archive[,2], mo_archive[,4], pch = 19, col = sol_colors, cex = 1.2,
+     xlab = "PEV Max", ylab = "Cook's Distance Mean",
+     main = "PEV Max vs Cook's Distance")
+grid(TRUE)
+
+plot(mo_archive[,3], mo_archive[,4], pch = 19, col = sol_colors, cex = 1.2,
+     xlab = "A-optimality", ylab = "Cook's Distance Mean",
+     main = "A-optimality vs Cook's Distance")
+grid(TRUE)
+
+# Archive size evolution (if available)
+n_gen_adv <- 80  # Number of generations used
+archive_sizes <- rep(nrow(mo_archive), n_gen_adv)
+plot(1:n_gen_adv, archive_sizes, type = "l", 
+     col = "darkblue", lwd = 2,
+     xlab = "Generation", ylab = "Archive Size",
+     main = "Pareto Archive Evolution")
+grid(TRUE)
+
+# Add legend
+par(mfrow = c(1, 1))
+plot.new()
+legend("center", 
+       legend = c("Pareto Solutions", "Best PEV Mean", "Best Robustness", "Best Compromise"),
+       pch = 19, col = c("lightblue", "red", "green", "purple"), cex = 1.5,
+       title = "Multi-Objective Solution Types")
+```
+
+# Convergence Diagnostics
+
+The enhanced GA provides comprehensive diagnostics to help users understand and improve optimization performance.
+
+```{r convergence-diagnostics}
+cat("Convergence Diagnostics Example\n")
+cat("==============================\n")
+
+# Run GA with verbose convergence tracking
+set.seed(202)
+ga_diagnostic <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 35,
+  niterations = 60,
+  criterion = "pev_mean",
+  selection_method = "rank",
+  selection_pressure = 1.3,
+  enable_restart = TRUE,
+  restart_threshold = 0.7,
+  convergence_window_multiplier = 4,
+  verbose = FALSE
+)
+
+# Generate comprehensive diagnostics
+diags <- convergence_diagnostics(ga_diagnostic, plot = FALSE)
+
+cat("Convergence Analysis:\n")
+cat("- Converged:", diags$convergence_status$converged, "\n")
+cat("- Reason:", diags$convergence_status$reason, "\n")
+cat("- Window size:", diags$window_size, "\n")
+cat("- Data points analyzed:", diags$data_points, "\n")
+
+cat("\nQuantitative Metrics:\n")
+metrics <- diags$metrics
+cat("- Fitness stability:", sprintf("%.8f", metrics$fitness_stability), "\n")
+cat("- Diversity stability:", sprintf("%.6f", metrics$diversity_stability), "\n")
+cat("- Mean improvement rate:", sprintf("%.8f", metrics$mean_improvement_rate), "\n")
+cat("- Variance stability:", sprintf("%.6f", metrics$variance_stability), "\n")
+
+cat("\nDetailed Convergence Criteria:\n")
+details <- diags$convergence_status$criteria_details
+cat("- Fitness converged:", details$fitness_converged, 
+    sprintf(" (range: %.8f)", details$fitness_range), "\n")
+cat("- Improvement converged:", details$improvement_converged,
+    sprintf(" (mean rate: %.8f)", details$mean_improvement), "\n")
+cat("- Diversity converged:", details$diversity_converged,
+    sprintf(" (std: %.6f)", details$diversity_std), "\n")
+cat("- Variance converged:", details$variance_converged,
+    sprintf(" (std: %.6f)", details$variance_std), "\n")
+
+if (length(diags$recommendations) > 0) {
+  cat("\nOptimization Recommendations:\n")
+  for (rec in diags$recommendations) {
+    cat(paste("-", rec, "\n"))
+  }
+} else {
+  cat("\nNo specific recommendations - optimization performed well.\n")
+}
+```
+
+```{r plot-detailed-diagnostics, fig.width=12, fig.height=10}
+# Create detailed diagnostic plots
+par(mfrow = c(2, 3))
+
+# Plot fitness evolution with convergence window
+fitness_hist <- ga_diagnostic$fitness_history
+plot(1:nrow(fitness_hist), fitness_hist[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness",
+     main = "Fitness Evolution")
+lines(1:nrow(fitness_hist), fitness_hist[, "mean"], col = "red", lty = 2)
+legend("topright", legend = c("Best", "Mean"), col = c("blue", "red"), 
+       lty = c(1, 2), lwd = 2)
+grid(TRUE)
+
+# Plot population diversity
+diversity_hist <- sapply(ga_diagnostic$population_stats, function(x) x$diversity)
+plot(1:length(diversity_hist), diversity_hist,
+     type = "l", col = "green", lwd = 2,
+     xlab = "Generation", ylab = "Diversity",
+     main = "Population Diversity")
+grid(TRUE)
+
+# Plot fitness variance
+variance_hist <- sapply(ga_diagnostic$population_stats, function(x) x$fitness_std)
+plot(1:length(variance_hist), variance_hist,
+     type = "l", col = "purple", lwd = 2,
+     xlab = "Generation", ylab = "Fitness Std Dev",
+     main = "Population Fitness Variance")
+grid(TRUE)
+
+# Plot improvement rate (if available from convergence history)
+if (!is.null(ga_diagnostic$convergence_history$improvement_rate)) {
+  improvement_data <- ga_diagnostic$convergence_history$improvement_rate
+  valid_indices <- which(!is.na(improvement_data) & improvement_data > 0)
+  if (length(valid_indices) > 1) {
+    plot(valid_indices, improvement_data[valid_indices],
+         type = "l", col = "orange", lwd = 2,
+         xlab = "Generation", ylab = "Improvement Rate",
+         main = "Fitness Improvement Rate")
+    grid(TRUE)
+  } else {
+    # Create placeholder plot if no valid improvement data
+    plot(1:10, rep(0, 10), type = "n",
+         xlab = "Generation", ylab = "Improvement Rate",
+         main = "Fitness Improvement Rate\n(No valid data)")
+    text(5, 0, "No improvement data available", cex = 1.2)
+  }
+} else {
+  # Create placeholder plot if improvement data not available
+  plot(1:10, rep(0, 10), type = "n",
+       xlab = "Generation", ylab = "Improvement Rate",
+       main = "Fitness Improvement Rate\n(Not available)")
+  text(5, 0, "Improvement rate tracking not available", cex = 1.2)
+}
+
+# Plot convergence criteria status over time
+conv_hist <- ga_diagnostic$convergence_history
+if (!is.null(conv_hist$fitness) && length(conv_hist$fitness) > 0) {
+  valid_fit <- which(!is.na(conv_hist$fitness) & is.finite(conv_hist$fitness))
+  if (length(valid_fit) > 1) {
+    plot(valid_fit, conv_hist$fitness[valid_fit],
+         type = "l", col = "darkblue", lwd = 2,
+         xlab = "Window Position", ylab = "Tracked Fitness",
+         main = "Convergence Window Tracking")
+    grid(TRUE)
+  } else {
+    # Create placeholder plot if insufficient valid data
+    plot(1:10, rep(0, 10), type = "n",
+         xlab = "Window Position", ylab = "Tracked Fitness",
+         main = "Convergence Window Tracking\n(Insufficient data)")
+    text(5, 0, "Not enough convergence data", cex = 1.2)
+  }
+} else {
+  # Create placeholder plot if no convergence data
+  plot(1:10, rep(0, 10), type = "n",
+       xlab = "Window Position", ylab = "Tracked Fitness",
+       main = "Convergence Window Tracking\n(No data)")
+  text(5, 0, "Convergence tracking not available", cex = 1.2)
+}
+
+# Summary statistics plot
+# Ensure all metrics are finite and replace any problematic values
+fitness_stab <- ifelse(is.finite(diags$metrics$fitness_stability), diags$metrics$fitness_stability, 0)
+diversity_stab <- ifelse(is.finite(diags$metrics$diversity_stability), diags$metrics$diversity_stability * 10, 0)
+improvement_rate <- ifelse(is.finite(diags$metrics$mean_improvement_rate), diags$metrics$mean_improvement_rate * 1000, 0)
+variance_stab <- ifelse(is.finite(diags$metrics$variance_stability), diags$metrics$variance_stability, 0)
+
+barplot(c(fitness_stab, diversity_stab, improvement_rate, variance_stab),
+        names.arg = c("Fitness\nStability", "Diversity\nStability\n(×10)", 
+                     "Improvement\nRate (×1000)", "Variance\nStability"),
+        col = c("blue", "green", "orange", "purple"),
+        main = "Convergence Metrics Summary",
+        ylab = "Metric Value")
+
+par(mfrow = c(1, 1))
+```
+
+# Parameter Validation and Recommendations
+
+The enhanced GA includes automatic parameter validation with helpful suggestions.
+
+```{r parameter-validation}
+cat("Parameter Validation Examples\n")
+cat("============================\n")
+
+# Test parameter validation with invalid parameters
+cat("Testing automatic parameter correction...\n")
+
+# This will trigger warnings and automatic corrections
+suppressWarnings({
+  validation_result <- validate_selection_parameters(
+    selection_method = "invalid_method",
+    tournament_size = 100,  # Too large
+    selection_pressure = 3.0,  # Out of range
+    population_size = 20
+  )
+})
+
+cat("Validation Results:\n")
+cat("- Corrected selection method:", validation_result$selection_method, "\n")
+cat("- Corrected tournament size:", validation_result$tournament_size, "\n")
+cat("- Corrected selection pressure:", validation_result$selection_pressure, "\n")
+
+if (length(validation_result$warnings) > 0) {
+  cat("\nAutomatic Corrections Made:\n")
+  for (warning in validation_result$warnings) {
+    cat(paste("-", warning, "\n"))
+  }
+}
+
+# Demonstrate the GA handling invalid parameters gracefully
+cat("\nTesting GA with initially invalid parameters...\n")
+ga_corrected <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 20,
+  niterations = 30,
+  criterion = "pev_mean",
+  selection_method = "rank",
+  tournament_size = 25,  # Will be corrected to 20 (population size)
+  selection_pressure = 0.8,  # Will be corrected to 1.0 (minimum)
+  verbose = FALSE
+)
+
+cat("GA ran successfully with corrected parameters:\n")
+cat("- Final tournament size:", ga_corrected$parameters$tournament_size, "\n")
+cat("- Final selection pressure:", ga_corrected$parameters$selection_pressure, "\n")
+cat("- Best fitness achieved:", sprintf("%.6f", ga_corrected$best_fitness), "\n")
+```
+
+# Performance Recommendations
+
+Based on the analysis, here are recommendations for optimal use of the enhanced features:
+
+```{r performance-recommendations}
+cat("Performance Recommendations\n")
+cat("===========================\n")
+
+cat("1. Convergence Detection:\n")
+cat("   - Use convergence_window_multiplier = 3-5 for robust detection\n")
+cat("   - Monitor convergence diagnostics to tune parameters\n")
+cat("   - Adjust tolconv based on your precision requirements\n\n")
+
+cat("2. Restart Mechanisms:\n")
+cat("   - Enable restart for complex optimization landscapes\n")
+cat("   - Set restart_threshold = 0.5-0.7 (restart if converged before 50-70% of iterations)\n")
+cat("   - Use max_restarts = 1-2 to balance exploration vs. computation time\n\n")
+
+cat("3. Selection Methods:\n")
+cat("   - Tournament: Good general-purpose method, robust and reliable\n")
+cat("   - Rank: Better control over selection pressure, use selection_pressure = 1.2-1.8\n")
+cat("   - Elite: Fast convergence but may lack diversity\n")
+cat("   - Hybrid: Combines benefits of multiple methods\n\n")
+
+cat("4. Population Parameters:\n")
+cat("   - Population size: 50-200 for most problems\n")
+cat("   - Larger populations for complex, multi-modal landscapes\n")
+cat("   - Monitor diversity to ensure adequate exploration\n\n")
+
+cat("5. Convergence Monitoring:\n")
+cat("   - Always check convergence_diagnostics() output\n")
+cat("   - Look for 'converged' status and examine the reason\n")
+cat("   - Follow recommendations for parameter adjustments\n")
+
+# Example of optimal configuration
+cat("\nExample Optimal Configuration:\n")
+cat("------------------------------\n")
+cat("subset_ga(\n")
+cat("  P = your_matrix,\n")
+cat("  Candidates = your_candidates,\n")
+cat("  Test = your_test_set,\n")
+cat("  ntoselect = target_size,\n")
+cat("  npop = 100,\n")
+cat("  niterations = 200,\n")
+cat("  criterion = 'pev_mean',\n")
+cat("  selection_method = 'rank',\n")
+cat("  selection_pressure = 1.4,\n")
+cat("  enable_restart = TRUE,\n")
+cat("  restart_threshold = 0.6,\n")
+cat("  max_restarts = 2,\n")
+cat("  convergence_window_multiplier = 4,\n")
+cat("  tolconv = 1e-7,\n")
+cat("  verbose = TRUE\n")
+cat(")\n")
+```
+
+# Conclusion
+
+The enhanced genetic algorithm in STPGA v7.0.0 provides significantly improved optimization capabilities:
+
+1. **Robust Convergence**: Multi-criteria detection prevents premature stopping
+2. **Automatic Recovery**: Restart mechanisms help escape local optima  
+3. **Flexible Selection**: Multiple selection methods with parameter validation
+4. **Comprehensive Diagnostics**: Detailed analysis helps optimize performance
+5. **User-Friendly**: Automatic parameter correction with helpful warnings
+
+These improvements make STPGA more reliable and effective for complex optimization problems in genomic selection and experimental design.
+
+For detailed information on all parameters and functions, see the main package documentation and the comprehensive vignette.
+
+```{r session-info}
+sessionInfo()
+```

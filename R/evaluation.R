@@ -49,7 +49,7 @@ evaluate_population <- function(population, P, test = NULL, criterion = "PEVMEAN
       
       return(fitness)
     }, error = function(e) {
-      # Suppress warnings in tests, just return Inf for invalid solutions
+      warning("Error in population evaluation: ", e$message, call. = FALSE)
       return(Inf)
     })
   }
@@ -148,7 +148,7 @@ group_similar_solutions <- function(population, target_batch_size) {
   
   # Create groups
   groups <- list()
-  current_group <- list()
+  current_group <- integer(0)
   current_size <- 0
   
   for (i in size_order) {
@@ -160,7 +160,7 @@ group_similar_solutions <- function(population, target_batch_size) {
         indices = current_group,
         solutions = population[current_group]
       )
-      current_group <- list()
+      current_group <- integer(0)
       current_size <- 0
     }
   }
@@ -201,8 +201,12 @@ group_similar_solutions <- function(population, target_batch_size) {
 evaluate_solution_batch <- function(solutions, P, test, criterion, lambda, C, K, Vg, Ve, mc.cores) {
   
   # Check for identical solutions in batch to avoid redundant computation
-  unique_solutions <- unique(lapply(solutions, sort))
-  unique_indices <- match(lapply(solutions, sort), unique_solutions)
+  solution_keys <- vapply(lapply(solutions, sort), paste, collapse = "\r", FUN.VALUE = character(1))
+  unique_keys <- unique(solution_keys)
+  unique_indices <- match(solution_keys, unique_keys)
+  unique_solutions <- lapply(unique_keys, function(key) {
+    solutions[[which(solution_keys == key)[1]]]
+  })
   
   # Evaluate unique solutions only
   unique_fitness <- numeric(length(unique_solutions))
@@ -287,8 +291,8 @@ transform_fitness <- function(fitness, method = "linear", scaling_factor = 2) {
     
     "rank" = {
       # Rank-based transformation
-      ranks <- rank(-fitness, ties.method = "random")  # Negative for minimization
-      return(ranks)
+      ranks <- rank(-fitness, ties.method = "random", na.last = "keep")  # Negative for minimization
+      return(as.numeric(ranks))
     },
     
     "tournament" = {
@@ -324,7 +328,9 @@ compute_population_stats <- function(population, fitness) {
       mean_fitness = Inf,
       fitness_std = 0,
       diversity = 0,
-      convergence_metric = 0
+      convergence_metric = 0,
+      valid_solutions = 0,
+      invalid_solutions = length(fitness)
     ))
   }
   

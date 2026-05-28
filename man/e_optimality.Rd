@@ -30,6 +30,39 @@ It is equivalent to maximizing the minimum eigenvalue of X'X where X is the desi
 
 Mathematical formula: E = log(λ_max((X'X)^(-1)))
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(321)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:20]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute E-optimality (minimizes maximum variance)
+eopt_value <- e_optimality(train_set, test_set, PC_subset)
+print(paste("E-optimality value:", round(eopt_value, 6)))
+
+# Compare with A and D optimality for same training set
+aopt_value <- a_optimality(train_set, test_set, PC_subset)
+dopt_value <- d_optimality(train_set, test_set, PC_subset)
+
+print(paste("A-optimality:", round(aopt_value, 6)))
+print(paste("D-optimality:", round(dopt_value, 6)))
+print(paste("E-optimality:", round(eopt_value, 6)))
+
+}
 \references{
 Atkinson, A.C., Donev, A.N., Tobias, R.D. (2007). Optimum Experimental Designs. Oxford.
 }

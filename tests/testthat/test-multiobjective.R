@@ -7,8 +7,8 @@ test_that("subset_ga_multiobjective basic functionality works", {
   rownames(Pcs) <- paste0("ind", 1:n)
   colnames(Pcs) <- paste0("PC", 1:p)
   
-  candidates <- rownames(Pcs)
   test_set <- paste0("ind", 21:25)
+  candidates <- setdiff(rownames(Pcs), test_set)
   ntoselect <- 12
   
   criteria <- c("pev_mean", "cd_mean")
@@ -150,13 +150,14 @@ test_that("evaluate_multiobjective_population works correctly", {
   P <- matrix(rnorm(n * p), n, p)
   rownames(P) <- paste0("ind", 1:n)
   
+  test_set <- paste0("ind", 16:18)
+  candidates <- setdiff(rownames(P), test_set)
+  
   # Create population
   population <- list()
   for (i in 1:5) {
-    population[[i]] <- sample(rownames(P), 8)
+    population[[i]] <- sample(candidates, 8)
   }
-  
-  test_set <- paste0("ind", 16:18)
   criteria <- c("a_optimality", "pev_mean", "cd_mean")
   
   # Test evaluation
@@ -425,8 +426,8 @@ test_that("legacy wrapper functions work correctly", {
   Pcs <- matrix(rnorm(n * p), n, p)
   rownames(Pcs) <- paste0("ind", 1:n)
   
-  candidates <- rownames(Pcs)
   test_set <- paste0("ind", 16:18)
+  candidates <- setdiff(rownames(Pcs), test_set)
   ntoselect <- 8
   
   # Test legacy function
@@ -549,8 +550,8 @@ test_that("multiobjective GA converges appropriately", {
   Pcs <- matrix(rnorm(n * p), n, p)
   rownames(Pcs) <- paste0("ind", 1:n)
   
-  candidates <- rownames(Pcs)
   test_set <- paste0("ind", 21:23)
+  candidates <- setdiff(rownames(Pcs), test_set)
   ntoselect <- 10
   
   criteria <- c("a_optimality", "d_optimality")

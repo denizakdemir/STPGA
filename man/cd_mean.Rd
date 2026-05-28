@@ -30,7 +30,7 @@ by the model, using the hat matrix diagonal (leverage values).
 Computes R² as the average leverage from the hat matrix, which represents
 the proportion of variance explained by the model in experimental design.
 
-Formula: R² = tr(H)/n where H = X(X'X)⁻¹X' is the hat matrix
+Formula: R^2 = tr(H)/n where H = X(X'X)^(-1)X' is the hat matrix
 
 This is the standard definition used when response data is not available.
 }

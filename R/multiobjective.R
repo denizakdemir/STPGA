@@ -44,6 +44,10 @@ subset_ga_multiobjective <- function(Pcs = NULL, Dist = NULL, Kernel = NULL,
     stop("Length of criteria must match length of criteria_types")
   }
   
+  if (!is.null(test)) {
+    candidates <- setdiff(candidates, test)
+  }
+  
   # Determine primary matrix for optimization
   P <- determine_primary_matrix(Pcs, Dist, Kernel)
   
@@ -286,6 +290,10 @@ update_pareto_archive <- function(population, fitness, archive, archive_fitness,
 non_dominated_sorting <- function(fitness, criteria_types) {
   
   n_solutions <- nrow(fitness)
+  if (n_solutions == 0) {
+    return(numeric(0))
+  }
+  
   dominance_count <- numeric(n_solutions)  # Number of solutions that dominate this one
   dominated_list <- vector("list", n_solutions)  # Solutions dominated by this one
   ranks <- numeric(n_solutions)
@@ -724,8 +732,17 @@ GenAlgForSubsetSelectionMO <- function(...) {
   
   args <- list(...)
   # Convert old parameter names to new ones
+  if (!is.null(args$Test)) args$test <- args$Test
+  if (!is.null(args$Candidates)) args$candidates <- args$Candidates
   if (!is.null(args$selectionstats)) args$criteria <- args$selectionstats
   if (!is.null(args$selectionstatstypes)) args$criteria_types <- args$selectionstatstypes
+  if (!is.null(args$plotdirections)) args$plot_directions <- args$plotdirections
+  if (!is.null(args$npopGA)) args$npop <- args$npopGA
+  if (!is.null(args$nitGA)) args$niterations <- args$nitGA
+  if (!is.null(args$plotiters)) args$plot_iterations <- args$plotiters
+  
+  args[c("Test", "Candidates", "selectionstats", "selectionstatstypes",
+         "plotdirections", "npopGA", "nitGA", "plotiters")] <- NULL
   
   do.call(subset_ga_multiobjective, args)
 }
@@ -735,8 +752,16 @@ GenAlgForSubsetSelectionMONoTest <- function(...) {
               msg = "GenAlgForSubsetSelectionMONoTest is deprecated. Use subset_ga_multiobjective_single instead.")
   
   args <- list(...)
+  if (!is.null(args$Candidates)) args$candidates <- args$Candidates
   if (!is.null(args$selectionstats)) args$criteria <- args$selectionstats
   if (!is.null(args$selectionstatstypes)) args$criteria_types <- args$selectionstatstypes
+  if (!is.null(args$plotdirections)) args$plot_directions <- args$plotdirections
+  if (!is.null(args$npopGA)) args$npop <- args$npopGA
+  if (!is.null(args$nitGA)) args$niterations <- args$nitGA
+  if (!is.null(args$plotiters)) args$plot_iterations <- args$plotiters
+  
+  args[c("Candidates", "selectionstats", "selectionstatstypes",
+         "plotdirections", "npopGA", "nitGA", "plotiters")] <- NULL
   
   do.call(subset_ga_multiobjective_single, args)
 }

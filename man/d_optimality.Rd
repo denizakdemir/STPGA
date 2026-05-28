@@ -30,6 +30,44 @@ It is equivalent to maximizing the determinant of X'X where X is the design matr
 
 Mathematical formula: D = log(det(X'X))
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(456)
+subset_indices <- sample(1:nrow(Wheat.M), 60)
+M_subset <- Wheat.M[subset_indices, 1:15]
+
+# Extract principal components for D-optimality
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:4]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 10)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 15)
+
+# Compute D-optimality (minimizes generalized variance)
+dopt_value <- d_optimality(train_set, test_set, PC_subset)
+print(paste("D-optimality value:", round(dopt_value, 4)))
+
+# Compare with different training sets
+train_set2 <- sample(candidates, 15)
+dopt_value2 <- d_optimality(train_set2, test_set, PC_subset)
+
+print(paste("Training set 1 D-opt:", round(dopt_value, 4)))
+print(paste("Training set 2 D-opt:", round(dopt_value2, 4)))
+
+if (dopt_value < dopt_value2) {
+  print("Training set 1 is better (lower D-optimality)")
+} else {
+  print("Training set 2 is better (lower D-optimality)")
+}
+
+}
 \references{
 Kiefer, J. (1959). Optimum experimental designs. Journal of the Royal Statistical Society B.
 }

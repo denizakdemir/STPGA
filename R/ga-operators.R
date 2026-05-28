@@ -14,6 +14,10 @@ crossover <- function(parent1, parent2, ntoselect, candidates,
                      method = "uniform", bias = 0.5) {
   
   # Input validation
+  if (length(candidates) < ntoselect) {
+    stop("candidates must contain at least ntoselect individuals")
+  }
+  
   if (length(parent1) == 0 || length(parent2) == 0) {
     return(sample(candidates, ntoselect, replace = FALSE))
   }
@@ -337,6 +341,180 @@ elite_selection <- function(population, fitness, n_select) {
   order(fitness)[1:n_select]
 }
 
+#' Rank-based selection with selection pressure control
+#' @param population List of solutions
+#' @param fitness Vector of fitness values
+#' @param n_select Number of individuals to select
+#' @param selection_pressure Selection pressure parameter (1.0-2.0, default: 1.5)
+#' @param method Rank selection method: "linear", "exponential" (default: "linear")
+#' @return Indices of selected individuals
+#' @export
+#' 
+#' @examples
+#' # Create a sample population and fitness values
+#' set.seed(123)
+#' population <- list(
+#'   c("ind1", "ind2", "ind3"),
+#'   c("ind2", "ind4", "ind5"),
+#'   c("ind1", "ind3", "ind6"),
+#'   c("ind4", "ind5", "ind6"),
+#'   c("ind1", "ind4", "ind7")
+#' )
+#' 
+#' # Fitness values (lower is better for minimization)
+#' fitness <- c(10.5, 8.2, 12.1, 9.8, 7.5)
+#' 
+#' # Rank-based selection with moderate pressure
+#' selected_indices <- rank_selection(population, fitness, n_select = 3, 
+#'                                   selection_pressure = 1.4, method = "linear")
+#' print("Selected indices:")
+#' print(selected_indices)
+#' print("Corresponding fitness values:")
+#' print(fitness[selected_indices])
+#' 
+#' # Compare different selection pressures
+#' low_pressure <- rank_selection(population, fitness, 3, 1.1, "linear")
+#' high_pressure <- rank_selection(population, fitness, 3, 1.8, "linear")
+#' 
+#' print("Low pressure selection:")
+#' print(fitness[low_pressure])
+#' print("High pressure selection:")
+#' print(fitness[high_pressure])
+#' 
+#' # Exponential ranking
+#' exp_selection <- rank_selection(population, fitness, 3, 1.3, "exponential")
+#' print("Exponential ranking selection:")
+#' print(fitness[exp_selection])
+rank_selection <- function(population, fitness, n_select, selection_pressure = 1.5, 
+                          method = "linear") {
+  
+  # Validate selection pressure
+  if (selection_pressure < 1.0 || selection_pressure > 2.0) {
+    warning("Selection pressure should be between 1.0 and 2.0. Adjusting to valid range.")
+    selection_pressure <- pmax(1.0, pmin(2.0, selection_pressure))
+  }
+  
+  n_pop <- length(population)
+  if (n_select > n_pop) {
+    warning("Cannot select more individuals than population size")
+    n_select <- n_pop
+  }
+  
+  # Rank individuals (1 = best, n_pop = worst for minimization)
+  ranks <- rank(fitness, ties.method = "random")
+  
+  # Calculate selection probabilities based on rank
+  probabilities <- switch(method,
+    "linear" = {
+      # Linear ranking: P(i) = (2 - SP + 2 * (SP - 1) * (rank - 1) / (n - 1)) / n
+      linear_probs <- (2 - selection_pressure + 
+                      2 * (selection_pressure - 1) * (n_pop - ranks) / (n_pop - 1)) / n_pop
+      pmax(linear_probs, 0)  # Ensure non-negative
+    },
+    
+    "exponential" = {
+      # Exponential ranking: P(i) = c * r^(rank-1)
+      c_value <- (selection_pressure - 1) / (selection_pressure^n_pop - 1)
+      exp_probs <- c_value * selection_pressure^(n_pop - ranks)
+      exp_probs / sum(exp_probs)  # Normalize
+    }
+  )
+  
+  # Perform selection with replacement using calculated probabilities
+  selected_indices <- sample(1:n_pop, n_select, replace = TRUE, prob = probabilities)
+  
+  return(selected_indices)
+}
+
+#' Validate and adjust selection parameters
+#' @param selection_method Selection method name
+#' @param tournament_size Tournament size (for tournament selection)
+#' @param selection_pressure Selection pressure (for rank selection)
+#' @param population_size Population size
+#' @return List with validated parameters and warnings
+#' @export
+#' 
+#' @examples
+#' # Test parameter validation with valid parameters
+#' validation_good <- validate_selection_parameters(
+#'   selection_method = "rank",
+#'   tournament_size = 3,
+#'   selection_pressure = 1.5,
+#'   population_size = 50
+#' )
+#' 
+#' print("Valid parameters:")
+#' print(paste("Method:", validation_good$selection_method))
+#' print(paste("Tournament size:", validation_good$tournament_size))
+#' print(paste("Selection pressure:", validation_good$selection_pressure))
+#' print(paste("Warnings:", length(validation_good$warnings)))
+#' 
+#' # Test parameter validation with invalid parameters
+#' validation_bad <- validate_selection_parameters(
+#'   selection_method = "invalid_method",
+#'   tournament_size = 100,  # Too large
+#'   selection_pressure = 3.0,  # Out of range
+#'   population_size = 25
+#' )
+#' 
+#' print("Invalid parameters corrected:")
+#' print(paste("Method corrected to:", validation_bad$selection_method))
+#' print(paste("Tournament size corrected to:", validation_bad$tournament_size))
+#' print(paste("Selection pressure corrected to:", validation_bad$selection_pressure))
+#' print(paste("Number of warnings:", length(validation_bad$warnings)))
+#' 
+#' for (warning in validation_bad$warnings) {
+#'   print(paste("Warning:", warning))
+#' }
+validate_selection_parameters <- function(selection_method, tournament_size = 3, 
+                                        selection_pressure = 1.5, population_size) {
+  
+  warnings <- character(0)
+  
+  # Validate selection method
+  valid_methods <- c("tournament", "elite", "rank", "hybrid")
+  if (!selection_method %in% valid_methods) {
+    warning(paste("Invalid selection method:", selection_method, 
+                 ". Using 'tournament' instead."))
+    selection_method <- "tournament"
+    warnings <- c(warnings, "Invalid selection method corrected")
+  }
+  
+  # Validate tournament size
+  if (selection_method %in% c("tournament", "hybrid")) {
+    if (tournament_size < 2 || tournament_size > population_size) {
+      old_tournament_size <- tournament_size
+      tournament_size <- max(2, min(tournament_size, population_size))
+      warnings <- c(warnings, 
+                   paste("Tournament size adjusted from", old_tournament_size, 
+                        "to", tournament_size))
+    }
+  }
+  
+  # Validate selection pressure
+  if (selection_method %in% c("rank", "hybrid")) {
+    if (selection_pressure < 1.0 || selection_pressure > 2.0) {
+      old_pressure <- selection_pressure
+      selection_pressure <- max(1.0, min(2.0, selection_pressure))
+      warnings <- c(warnings,
+                   paste("Selection pressure adjusted from", old_pressure,
+                        "to", selection_pressure))
+    }
+  }
+  
+  # Population size warnings
+  if (population_size < 10) {
+    warnings <- c(warnings, "Very small population size may lead to premature convergence")
+  }
+  
+  list(
+    selection_method = selection_method,
+    tournament_size = tournament_size,
+    selection_pressure = selection_pressure,
+    warnings = warnings
+  )
+}
+
 #' Crowding replacement for diversity preservation
 #' @param offspring New offspring solutions
 #' @param offspring_fitness Fitness of offspring
@@ -381,6 +559,10 @@ crowding_replacement <- function(offspring, offspring_fitness, population,
 #' @param alpha Sharing function exponent (default: 1)
 #' @return Adjusted fitness values
 fitness_sharing <- function(fitness, population, sharing_radius = 0.1, alpha = 1) {
+  if (sharing_radius >= 1) {
+    return(as.numeric(fitness))
+  }
+  
   n_pop <- length(population)
   shared_fitness <- numeric(n_pop)
   
@@ -390,8 +572,8 @@ fitness_sharing <- function(fitness, population, sharing_radius = 0.1, alpha = 1
     for (j in 1:n_pop) {
       # Calculate distance between solutions
       intersection <- length(intersect(population[[i]], population[[j]]))
-      union_size <- length(union(population[[i]], population[[j]]))
-      distance <- 1 - (intersection / union_size)  # Jaccard distance
+      min_size <- min(length(population[[i]]), length(population[[j]]))
+      distance <- if (min_size > 0) 1 - (intersection / min_size) else 1
       
       # Apply sharing function
       if (distance < sharing_radius) {
@@ -401,7 +583,7 @@ fitness_sharing <- function(fitness, population, sharing_radius = 0.1, alpha = 1
     }
     
     # Adjust fitness
-    shared_fitness[i] <- fitness[i] / max(sharing_sum, 1)
+    shared_fitness[i] <- fitness[i] * max(sharing_sum, 1)
   }
   
   return(shared_fitness)

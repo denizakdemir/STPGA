@@ -25,3 +25,39 @@ Maximum PEV value (lower is better)
 \description{
 Maximum Prediction Error Variance (PEV)
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(654)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:25]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute maximum PEV (worst-case prediction uncertainty)
+pev_max_value <- pev_max(train_set, test_set, PC_subset)
+pev_mean_value <- pev_mean(train_set, test_set, PC_subset)
+
+print(paste("Maximum PEV:", round(pev_max_value, 6)))
+print(paste("Mean PEV:", round(pev_mean_value, 6)))
+print(paste("Max/Mean ratio:", round(pev_max_value / pev_mean_value, 2)))
+
+# Compare normalized versions
+pev_max_norm <- pev_max(train_set, test_set, PC_subset, normalized = TRUE)
+pev_mean_norm <- pev_mean(train_set, test_set, PC_subset, normalized = TRUE)
+
+print(paste("Normalized Max PEV:", round(pev_max_norm, 6)))
+print(paste("Normalized Mean PEV:", round(pev_mean_norm, 6)))
+
+}

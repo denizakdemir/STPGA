@@ -1,0 +1,1679 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={STPGA: Subset Training Population Genetic Algorithm},
+  pdfauthor={Deniz Akdemir},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{STPGA: Subset Training Population Genetic Algorithm}
+\author{Deniz Akdemir}
+\date{2025-07-27}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}\label{introduction}
+
+The \textbf{STPGA} (Subset Training Population Genetic Algorithm)
+package provides advanced tools for optimizing training set selection in
+genomic prediction and experimental design. This vignette demonstrates
+the package's key functionalities using real wheat genomic data.
+
+\subsection{Key Features}\label{key-features}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Modern optimization criteria}: A-, D-, E-optimality, PEV,
+  Cook's Distance
+\item
+  \textbf{Mixed model support}: BLUP-based criteria for genomic
+  selection
+\item
+  \textbf{Genetic algorithms}: Single and multi-objective optimization
+\item
+  \textbf{Flexible interface}: Unified criterion function with legacy
+  compatibility
+\item
+  \textbf{Robust numerics}: Ridge regularization and numerical stability
+\end{itemize}
+
+\section{Getting Started}\label{getting-started}
+
+Let's start by loading the package and exploring the included wheat
+dataset:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(STPGA)}
+
+\CommentTok{\# Load the wheat dataset}
+\FunctionTok{data}\NormalTok{(}\StringTok{"WheatData"}\NormalTok{)}
+
+\CommentTok{\# Explore the data structure}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Dataset components:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Dataset components:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Wheat.Y: Phenotype data ("}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(Wheat.Y), }\StringTok{" observations)}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Wheat.Y: Phenotype data ( 200  observations)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Wheat.M: Marker data ("}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(Wheat.M), }\StringTok{" individuals x "}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(Wheat.M), }\StringTok{" markers)}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Wheat.M: Marker data ( 200  individuals x  4670  markers)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Wheat.K: Kinship matrix ("}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(Wheat.K), }\StringTok{" x "}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(Wheat.K), }\StringTok{")}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Wheat.K: Kinship matrix ( 200  x  200 )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Look at the phenotype data}
+\FunctionTok{head}\NormalTok{(Wheat.Y)}
+\CommentTok{\#\textgreater{}               id plant.height}
+\CommentTok{\#\textgreater{} 1846 10542{-}63/87        91.44}
+\CommentTok{\#\textgreater{} 250         131A       124.46}
+\CommentTok{\#\textgreater{} 1541        1548       129.54}
+\CommentTok{\#\textgreater{} 1516      155/71       124.46}
+\CommentTok{\#\textgreater{} 508         1664       134.62}
+\CommentTok{\#\textgreater{} 1549        1666       144.78}
+
+\CommentTok{\# Check marker data dimensions and first few markers}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Marker matrix preview:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Marker matrix preview:}
+\NormalTok{Wheat.M[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{]}
+\CommentTok{\#\textgreater{}            IWA1 IWA2 IWA3 IWA4 IWA5}
+\CommentTok{\#\textgreater{} IWA8610266    1    1   {-}1   {-}1   {-}1}
+\CommentTok{\#\textgreater{} IWA8606816    1    1    1   {-}1   {-}1}
+\CommentTok{\#\textgreater{} 3883          1    1    1   {-}1   {-}1}
+\CommentTok{\#\textgreater{} NW86A         1    1    1    1   {-}1}
+\CommentTok{\#\textgreater{} PI345476      1    1    1   {-}1   {-}1}
+
+\CommentTok{\# Examine kinship matrix structure}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Kinship matrix diagonal (first 10):}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Kinship matrix diagonal (first 10):}
+\FunctionTok{diag}\NormalTok{(Wheat.K)[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{]}
+\CommentTok{\#\textgreater{} IWA8610266 IWA8606816       3883      NW86A   PI345476    H86{-}708 IWA8602323 }
+\CommentTok{\#\textgreater{}   1.957836   2.003338   1.980769   2.281661   1.808700   1.047744   1.970056 }
+\CommentTok{\#\textgreater{}  237{-}VII/2       1666 IWA8610164 }
+\CommentTok{\#\textgreater{}   1.760409   2.084154   1.983354}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Kinship matrix off{-}diagonal (first 5x5):}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Kinship matrix off{-}diagonal (first 5x5):}
+\NormalTok{Wheat.K[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{]}
+\CommentTok{\#\textgreater{}            IWA8610266 IWA8606816       3883      NW86A   PI345476}
+\CommentTok{\#\textgreater{} IWA8610266  1.9578361  0.8261588  0.7546713  0.5149389 {-}0.2697654}
+\CommentTok{\#\textgreater{} IWA8606816  0.8261588  2.0033376  0.5756170  0.5241991 {-}0.2315324}
+\CommentTok{\#\textgreater{} 3883        0.7546713  0.5756170  1.9807687  0.7077443 {-}0.2888690}
+\CommentTok{\#\textgreater{} NW86A       0.5149389  0.5241991  0.7077443  2.2816612 {-}0.2645939}
+\CommentTok{\#\textgreater{} PI345476   {-}0.2697654 {-}0.2315324 {-}0.2888690 {-}0.2645939  1.8086996}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Optimization Criteria}\label{optimization-criteria}
+
+STPGA provides several optimization criteria for training set selection.
+Let's demonstrate each using the wheat data.
+
+\subsection{Setup for Demonstrations}\label{setup-for-demonstrations}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Define candidate pool and test sets}
+\NormalTok{all\_individuals }\OtherTok{\textless{}{-}} \FunctionTok{rownames}\NormalTok{(Wheat.M)}
+\NormalTok{n\_total }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(all\_individuals)}
+
+\CommentTok{\# Create training candidates and test set}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
+\NormalTok{test\_set }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(all\_individuals, }\DecValTok{40}\NormalTok{)}
+\NormalTok{candidates }\OtherTok{\textless{}{-}} \FunctionTok{setdiff}\NormalTok{(all\_individuals, test\_set)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Total individuals:"}\NormalTok{, n\_total, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Total individuals: 200}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Test set size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(test\_set), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Test set size: 40}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Candidate pool size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(candidates), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Candidate pool size: 160}
+
+\CommentTok{\# Extract first 5 principal components for non{-}mixed model criteria}
+\CommentTok{\# This reduces computational complexity for high{-}dimensional marker data}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Extracting first 5 principal components for non{-}mixed model criteria...}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Extracting first 5 principal components for non{-}mixed model criteria...}
+\NormalTok{pca\_result }\OtherTok{\textless{}{-}} \FunctionTok{prcomp}\NormalTok{(Wheat.M, }\AttributeTok{center =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{scale. =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{Wheat.PC5 }\OtherTok{\textless{}{-}}\NormalTok{ pca\_result}\SpecialCharTok{$}\NormalTok{x[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{]}
+\FunctionTok{rownames}\NormalTok{(Wheat.PC5) }\OtherTok{\textless{}{-}} \FunctionTok{rownames}\NormalTok{(Wheat.M)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PC matrix dimensions:"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(Wheat.PC5), }\StringTok{"x"}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(Wheat.PC5), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PC matrix dimensions: 200 x 5}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Variance explained by first 5 PCs:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f\%\%"}\NormalTok{, }\DecValTok{100} \SpecialCharTok{*} \FunctionTok{sum}\NormalTok{(pca\_result}\SpecialCharTok{$}\NormalTok{sdev[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{5}\NormalTok{]}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(pca\_result}\SpecialCharTok{$}\NormalTok{sdev}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{)), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Variance explained by first 5 PCs: 30.65\%}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Classical Optimality
+Criteria}\label{classical-optimality-criteria}
+
+The package implements the classical A-, D-, and E-optimality criteria
+from experimental design theory.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Select training sets of different sizes}
+\NormalTok{train\_small }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{30}\NormalTok{)}
+\NormalTok{train\_medium }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{60}\NormalTok{)}
+\NormalTok{train\_large }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{100}\NormalTok{)}
+
+\CommentTok{\# Compute A{-}optimality using first 5 PCs (minimizes average prediction variance)}
+\NormalTok{aopt\_small }\OtherTok{\textless{}{-}} \FunctionTok{a\_optimality}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{aopt\_medium }\OtherTok{\textless{}{-}} \FunctionTok{a\_optimality}\NormalTok{(train\_medium, test\_set, Wheat.PC5)}
+\NormalTok{aopt\_large }\OtherTok{\textless{}{-}} \FunctionTok{a\_optimality}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"A{-}optimality results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} A{-}optimality results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training (n=30):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, aopt\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training (n=30): 1.37e{-}03}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Medium training (n=60):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, aopt\_medium), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Medium training (n=60): 5.26e{-}04}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training (n=100):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, aopt\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training (n=100): 3.01e{-}04}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Improvement (large vs small):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.1fx"}\NormalTok{, aopt\_small}\SpecialCharTok{/}\NormalTok{aopt\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Improvement (large vs small): 4.5x}
+
+\CommentTok{\# D{-}optimality using first 5 PCs (minimizes generalized variance)}
+\NormalTok{dopt\_small }\OtherTok{\textless{}{-}} \FunctionTok{d\_optimality}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{dopt\_medium }\OtherTok{\textless{}{-}} \FunctionTok{d\_optimality}\NormalTok{(train\_medium, test\_set, Wheat.PC5)}
+\NormalTok{dopt\_large }\OtherTok{\textless{}{-}} \FunctionTok{d\_optimality}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{D{-}optimality results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} D{-}optimality results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training (n=30):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, dopt\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training (n=30): 42.80}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Medium training (n=60):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, dopt\_medium), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Medium training (n=60): 47.03}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training (n=100):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, dopt\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training (n=100): 49.77}
+
+\CommentTok{\# E{-}optimality using first 5 PCs (minimizes maximum variance)}
+\NormalTok{eopt\_small }\OtherTok{\textless{}{-}} \FunctionTok{e\_optimality}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{eopt\_medium }\OtherTok{\textless{}{-}} \FunctionTok{e\_optimality}\NormalTok{(train\_medium, test\_set, Wheat.PC5)}
+\NormalTok{eopt\_large }\OtherTok{\textless{}{-}} \FunctionTok{e\_optimality}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{E{-}optimality results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} E{-}optimality results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training (n=30):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, eopt\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training (n=30): 10.06}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Medium training (n=60):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, eopt\_medium), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Medium training (n=60): 10.69}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training (n=100):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, eopt\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training (n=100): 11.35}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Prediction Error Variance (PEV)
+Criteria}\label{prediction-error-variance-pev-criteria}
+
+PEV criteria are particularly relevant for prediction accuracy in
+genomic selection.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Mean PEV using first 5 PCs}
+\NormalTok{pev\_mean\_small }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{pev\_mean\_large }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\CommentTok{\# Normalized PEV using first 5 PCs (scale{-}invariant)}
+\NormalTok{pev\_norm\_small }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_small, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{pev\_norm\_large }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_large, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Maximum PEV using first 5 PCs (worst{-}case scenario)}
+\NormalTok{pev\_max\_small }\OtherTok{\textless{}{-}} \FunctionTok{pev\_max}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{pev\_max\_large }\OtherTok{\textless{}{-}} \FunctionTok{pev\_max}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PEV Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PEV Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean PEV (small):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, pev\_mean\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Mean PEV (small): 1.24e+00}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean PEV (large):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, pev\_mean\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Mean PEV (large): 1.05e+00}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Improvement:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.1fx"}\NormalTok{, pev\_mean\_small}\SpecialCharTok{/}\NormalTok{pev\_mean\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Improvement: 1.2x}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Normalized PEV:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Normalized PEV:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_norm\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training: 0.025000}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_norm\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training: 0.025000}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Max PEV:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Max PEV:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, pev\_max\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training: 1.76e+00}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, pev\_max\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training: 1.20e+00}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Max/Mean ratio (small):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, pev\_max\_small}\SpecialCharTok{/}\NormalTok{pev\_mean\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Max/Mean ratio (small): 1.42}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Max/Mean ratio (large):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f"}\NormalTok{, pev\_max\_large}\SpecialCharTok{/}\NormalTok{pev\_mean\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Max/Mean ratio (large): 1.14}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Coefficient of Determination (R²)
+Criteria}\label{coefficient-of-determination-ruxb2-criteria}
+
+The Coefficient of Determination measures the proportion of variance
+explained by the model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Mean Coefficient of Determination (R²) using first 5 PCs}
+\NormalTok{cd\_mean\_small }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(train\_small, test\_set, Wheat.PC5)}
+\NormalTok{cd\_mean\_large }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(train\_large, test\_set, Wheat.PC5)}
+
+\CommentTok{\# Normalized Coefficient of Determination using first 5 PCs}
+\NormalTok{cd\_norm\_small }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(train\_small, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{cd\_norm\_large }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(train\_large, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Coefficient of Determination Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Coefficient of Determination Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean CD (small):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, cd\_mean\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Mean CD (small): 2.42e{-}01}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Mean CD (large):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, cd\_mean\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Mean CD (large): 5.26e{-}02}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Normalized R²:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Normalized R²:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Small training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_norm\_small), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Small training: 0.025000}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Large training:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_norm\_large), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Large training: 0.025000}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Mixed Model Criteria for Genomic
+Selection}\label{mixed-model-criteria-for-genomic-selection}
+
+For genomic selection applications, the package provides mixed model
+criteria that account for genetic relationships.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Select smaller sets for computational efficiency with mixed models}
+\NormalTok{train\_mm }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{50}\NormalTok{)}
+\NormalTok{test\_mm }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(test\_set, }\DecValTok{20}\NormalTok{)}
+
+\CommentTok{\# Extract relevant kinship submatrices}
+\NormalTok{K\_train }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.K[train\_mm, train\_mm]}
+\NormalTok{K\_test }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.K[test\_mm, test\_mm]}
+\NormalTok{K\_test\_train }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.K[test\_mm, train\_mm]}
+
+\CommentTok{\# Mixed model PEV with different heritability scenarios}
+\NormalTok{h2\_high }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\AttributeTok{Vg =} \FloatTok{0.8}\NormalTok{, }\AttributeTok{Ve =} \FloatTok{0.2}\NormalTok{)  }\CommentTok{\# High heritability (80\%)}
+\NormalTok{h2\_low }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\AttributeTok{Vg =} \FloatTok{0.3}\NormalTok{, }\AttributeTok{Ve =} \FloatTok{0.7}\NormalTok{)   }\CommentTok{\# Low heritability (30\%)}
+
+\CommentTok{\# Use smaller dataset for computational efficiency}
+\CommentTok{\# For mixed models, use subset of individuals but all relationships}
+\NormalTok{all\_mm\_individuals }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(train\_mm, test\_mm)}
+\NormalTok{P\_subset }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.M[all\_mm\_individuals, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{100}\NormalTok{]  }\CommentTok{\# Use only first 100 markers}
+\NormalTok{K\_subset }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.K[all\_mm\_individuals, all\_mm\_individuals]}
+
+\CommentTok{\# Compute mixed model criteria with smaller dataset}
+\NormalTok{pev\_mm\_high }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean\_mm}\NormalTok{(train\_mm, test\_mm, P\_subset, K\_subset, }
+                           \AttributeTok{Vg =}\NormalTok{ h2\_high}\SpecialCharTok{$}\NormalTok{Vg, }\AttributeTok{Ve =}\NormalTok{ h2\_high}\SpecialCharTok{$}\NormalTok{Ve)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in pev\_mean\_mm(train\_mm, test\_mm, P\_subset, K\_subset, Vg = h2\_high$Vg,}
+\CommentTok{\#\textgreater{} : Negative PEV values detected. This may indicate numerical issues.}
+\NormalTok{pev\_mm\_low }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean\_mm}\NormalTok{(train\_mm, test\_mm, P\_subset, K\_subset, }
+                          \AttributeTok{Vg =}\NormalTok{ h2\_low}\SpecialCharTok{$}\NormalTok{Vg, }\AttributeTok{Ve =}\NormalTok{ h2\_low}\SpecialCharTok{$}\NormalTok{Ve)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in pev\_mean\_mm(train\_mm, test\_mm, P\_subset, K\_subset, Vg = h2\_low$Vg, :}
+\CommentTok{\#\textgreater{} Negative PEV values detected. This may indicate numerical issues.}
+
+\NormalTok{cd\_mm\_high }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean\_mm}\NormalTok{(train\_mm, test\_mm, P\_subset, K\_subset, }
+                         \AttributeTok{Vg =}\NormalTok{ h2\_high}\SpecialCharTok{$}\NormalTok{Vg, }\AttributeTok{Ve =}\NormalTok{ h2\_high}\SpecialCharTok{$}\NormalTok{Ve)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in pev\_mean\_mm(train, test, P, K, lambda, C, Vg, Ve): Negative PEV}
+\CommentTok{\#\textgreater{} values detected. This may indicate numerical issues.}
+\NormalTok{cd\_mm\_low }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean\_mm}\NormalTok{(train\_mm, test\_mm, P\_subset, K\_subset, }
+                        \AttributeTok{Vg =}\NormalTok{ h2\_low}\SpecialCharTok{$}\NormalTok{Vg, }\AttributeTok{Ve =}\NormalTok{ h2\_low}\SpecialCharTok{$}\NormalTok{Ve)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Negative PEV values}
+\CommentTok{\#\textgreater{} detected. This may indicate numerical issues.}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Mixed Model Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Mixed Model Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PEV (h² = 0.8):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_mm\_high), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PEV (h² = 0.8): 0.429349}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PEV (h² = 0.3):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_mm\_low), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PEV (h² = 0.3): 0.044506}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Heritability effect:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2fx"}\NormalTok{, pev\_mm\_low}\SpecialCharTok{/}\NormalTok{pev\_mm\_high), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Heritability effect: 0.10x}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Coefficient of Determination (mixed model):}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Coefficient of Determination (mixed model):}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"CD (h² = 0.8):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_mm\_high), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} CD (h² = 0.8): 0.463313}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"CD (h² = 0.3):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_mm\_low), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} CD (h² = 0.3): 0.851647}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Unified Criterion Interface}\label{unified-criterion-interface}
+
+The \texttt{criterion()} function provides a unified interface to all
+optimization criteria, supporting both modern and legacy names.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Define a medium{-}sized training set}
+\NormalTok{train\_unified }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{60}\NormalTok{)}
+
+\CommentTok{\# Test all modern criteria}
+\NormalTok{modern\_criteria }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"a\_optimality"}\NormalTok{, }\StringTok{"d\_optimality"}\NormalTok{, }\StringTok{"e\_optimality"}\NormalTok{, }
+                     \StringTok{"pev\_mean"}\NormalTok{, }\StringTok{"pev\_max"}\NormalTok{, }\StringTok{"cd\_mean"}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Modern Criteria Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Modern Criteria Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"========================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ========================}
+\ControlFlowTok{for}\NormalTok{ (crit }\ControlFlowTok{in}\NormalTok{ modern\_criteria) \{}
+\NormalTok{  value }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, Wheat.PC5, }\AttributeTok{criterion =}\NormalTok{ crit)}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}15s: \%12.6e}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, crit, value))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} a\_optimality   : 4.961210e{-}04}
+\CommentTok{\#\textgreater{} d\_optimality   : 4.721829e+01}
+\CommentTok{\#\textgreater{} e\_optimality   : 1.078261e+01}
+\CommentTok{\#\textgreater{} pev\_mean       : 1.090311e+00}
+\CommentTok{\#\textgreater{} pev\_max        : 1.290717e+00}
+\CommentTok{\#\textgreater{} cd\_mean        : 9.031103e{-}02}
+
+\CommentTok{\# Test normalized versions}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Normalized Criteria:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Normalized Criteria:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"===================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ===================}
+\NormalTok{pev\_norm }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, Wheat.PC5, }\AttributeTok{criterion =} \StringTok{"pev\_mean\_normalized"}\NormalTok{)}
+\NormalTok{cd\_norm }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, Wheat.PC5, }\AttributeTok{criterion =} \StringTok{"cd\_mean\_normalized"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}20s: \%12.6f}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\StringTok{"pev\_mean\_normalized"}\NormalTok{, pev\_norm))}
+\CommentTok{\#\textgreater{} pev\_mean\_normalized :     0.025000}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}20s: \%12.6f}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\StringTok{"cd\_mean\_normalized"}\NormalTok{, cd\_norm))}
+\CommentTok{\#\textgreater{} cd\_mean\_normalized  :     0.025000}
+
+\CommentTok{\# Test mixed model criteria (using subset for speed)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Mixed Model Criteria (100 markers):}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Mixed Model Criteria (100 markers):}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"===================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ===================================}
+\NormalTok{P\_unified\_subset }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.M[}\FunctionTok{c}\NormalTok{(train\_unified, test\_set), }\DecValTok{1}\SpecialCharTok{:}\DecValTok{100}\NormalTok{]}
+\NormalTok{K\_unified\_subset }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.K[}\FunctionTok{c}\NormalTok{(train\_unified, test\_set), }\FunctionTok{c}\NormalTok{(train\_unified, test\_set)]}
+\NormalTok{pev\_mm }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, P\_unified\_subset, }\AttributeTok{criterion =} \StringTok{"pev\_mean\_mm"}\NormalTok{, }\AttributeTok{K =}\NormalTok{ K\_unified\_subset)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in pev\_mean\_mm(train, test, P, K, lambda, C, Vg, Ve): Negative PEV}
+\CommentTok{\#\textgreater{} values detected. This may indicate numerical issues.}
+\NormalTok{cd\_mm }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, P\_unified\_subset, }\AttributeTok{criterion =} \StringTok{"cd\_mean\_mm"}\NormalTok{, }\AttributeTok{K =}\NormalTok{ K\_unified\_subset)}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Kinship matrix diagonal}
+\CommentTok{\#\textgreater{} values outside expected range [0.5, 2]}
+\CommentTok{\#\textgreater{} Warning in validate\_kinship\_matrix(K, rownames(P)): Negative PEV values}
+\CommentTok{\#\textgreater{} detected. This may indicate numerical issues.}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}15s: \%12.6e}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\StringTok{"pev\_mean\_mm"}\NormalTok{, pev\_mm))}
+\CommentTok{\#\textgreater{} pev\_mean\_mm    : 7.861779e{-}01}
+\FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}15s: \%12.6e}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }\StringTok{"cd\_mean\_mm"}\NormalTok{, cd\_mm))}
+\CommentTok{\#\textgreater{} cd\_mean\_mm     : 2.138221e{-}01}
+
+\CommentTok{\# Demonstrate legacy compatibility}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Legacy Compatibility:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Legacy Compatibility:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"====================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ====================}
+\NormalTok{aopt\_modern }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, Wheat.PC5, }\AttributeTok{criterion =} \StringTok{"a\_optimality"}\NormalTok{)}
+\NormalTok{aopt\_legacy }\OtherTok{\textless{}{-}} \FunctionTok{criterion}\NormalTok{(train\_unified, test\_set, Wheat.PC5, }\AttributeTok{criterion =} \StringTok{"AOPT"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Modern a\_optimality:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6e"}\NormalTok{, aopt\_modern), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Modern a\_optimality: 4.961210e{-}04}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Legacy AOPT:        "}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6e"}\NormalTok{, aopt\_legacy), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Legacy AOPT:         4.961210e{-}04}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Values match:"}\NormalTok{, aopt\_modern }\SpecialCharTok{==}\NormalTok{ aopt\_legacy, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Values match: TRUE}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Genetic Algorithm
+Optimization}\label{genetic-algorithm-optimization}
+
+STPGA's core functionality is optimizing training set selection using
+genetic algorithms with advanced convergence detection and selection
+mechanisms.
+
+\subsection{Enhanced Genetic Algorithm Features
+(v7.0.0)}\label{enhanced-genetic-algorithm-features-v7.0.0}
+
+The latest version includes significant improvements to the genetic
+algorithm implementation:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Multi-criteria convergence detection}: Monitors fitness
+  stabilization, improvement rate, population diversity, and fitness
+  variance
+\item
+  \textbf{Restart mechanisms}: Automatically restarts with diversified
+  populations when premature convergence is detected
+\item
+  \textbf{Advanced selection methods}: Tournament, elite, rank-based,
+  and hybrid selection with validation
+\item
+  \textbf{Configurable convergence windows}: Flexible convergence
+  tracking with diagnostic tools
+\end{itemize}
+
+\subsection{Single-Objective Optimization with Advanced
+Features}\label{single-objective-optimization-with-advanced-features}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Define optimization parameters}
+\NormalTok{n\_select }\OtherTok{\textless{}{-}} \DecValTok{40}  \CommentTok{\# Number of individuals to select}
+\NormalTok{n\_candidates }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(candidates)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Enhanced Genetic Algorithm Optimization}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Enhanced Genetic Algorithm Optimization}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"======================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ======================================}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Candidate pool size:"}\NormalTok{, n\_candidates, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Candidate pool size: 160}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Selection target:"}\NormalTok{, n\_select, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Selection target: 40}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Test set size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(test\_set), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Test set size: 40}
+
+\CommentTok{\# Demonstrate the genetic algorithm with advanced features}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{456}\NormalTok{)}
+
+\CommentTok{\# Basic genetic algorithm run}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Running genetic algorithm with default settings...}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Running genetic algorithm with default settings...}
+\NormalTok{ga\_basic }\OtherTok{\textless{}{-}} \FunctionTok{subset\_ga}\NormalTok{(}
+  \AttributeTok{P =}\NormalTok{ Wheat.PC5,}
+  \AttributeTok{Candidates =}\NormalTok{ candidates,}
+  \AttributeTok{Test =}\NormalTok{ test\_set,}
+  \AttributeTok{ntoselect =}\NormalTok{ n\_select,}
+  \AttributeTok{npop =} \DecValTok{30}\NormalTok{,}
+  \AttributeTok{niterations =} \DecValTok{50}\NormalTok{,}
+  \AttributeTok{criterion =} \StringTok{"pev\_mean"}\NormalTok{,}
+  \AttributeTok{verbose =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Basic GA Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Basic GA Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Best fitness:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, ga\_basic}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Best fitness: 1.09824362}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Convergence generation:"}\NormalTok{, ga\_basic}\SpecialCharTok{$}\NormalTok{convergence\_generation, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Convergence generation: 50}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Selection method:"}\NormalTok{, ga\_basic}\SpecialCharTok{$}\NormalTok{parameters}\SpecialCharTok{$}\NormalTok{selection\_method, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Selection method: tournament}
+
+\CommentTok{\# Enhanced genetic algorithm with rank{-}based selection and restart}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Running enhanced GA with rank{-}based selection and restart...}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Running enhanced GA with rank{-}based selection and restart...}
+\NormalTok{ga\_enhanced }\OtherTok{\textless{}{-}} \FunctionTok{subset\_ga}\NormalTok{(}
+  \AttributeTok{P =}\NormalTok{ Wheat.PC5,}
+  \AttributeTok{Candidates =}\NormalTok{ candidates,}
+  \AttributeTok{Test =}\NormalTok{ test\_set,}
+  \AttributeTok{ntoselect =}\NormalTok{ n\_select,}
+  \AttributeTok{npop =} \DecValTok{30}\NormalTok{,}
+  \AttributeTok{niterations =} \DecValTok{50}\NormalTok{,}
+  \AttributeTok{criterion =} \StringTok{"pev\_mean"}\NormalTok{,}
+  \AttributeTok{selection\_method =} \StringTok{"rank"}\NormalTok{,}
+  \AttributeTok{selection\_pressure =} \FloatTok{1.4}\NormalTok{,}
+  \AttributeTok{enable\_restart =} \ConstantTok{TRUE}\NormalTok{,}
+  \AttributeTok{restart\_threshold =} \FloatTok{0.6}\NormalTok{,}
+  \AttributeTok{max\_restarts =} \DecValTok{1}\NormalTok{,}
+  \AttributeTok{convergence\_window\_multiplier =} \DecValTok{3}\NormalTok{,}
+  \AttributeTok{verbose =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Enhanced GA Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Enhanced GA Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Best fitness:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Best fitness: 1.10192184}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Convergence generation:"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{convergence\_generation, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Convergence generation: 50}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Total generations:"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{total\_generations, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Total generations: 50}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Restart count:"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{restart\_count, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Restart count: 0}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Selection method:"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{parameters}\SpecialCharTok{$}\NormalTok{selection\_method, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Selection method: rank}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Selection pressure:"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{parameters}\SpecialCharTok{$}\NormalTok{selection\_pressure, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Selection pressure: 1.4}
+
+\CommentTok{\# Compare with random selection}
+\NormalTok{random\_selection }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, n\_select)}
+\NormalTok{random\_fitness }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(random\_selection, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Comparison Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Comparison Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Random selection PEV:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, random\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Random selection PEV: 0.02500000}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Basic GA PEV:       "}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, ga\_basic}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Basic GA PEV:        1.09824362}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Enhanced GA PEV:    "}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, ga\_enhanced}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Enhanced GA PEV:     1.10192184}
+
+\NormalTok{basic\_improvement }\OtherTok{\textless{}{-}}\NormalTok{ (random\_fitness }\SpecialCharTok{{-}}\NormalTok{ ga\_basic}\SpecialCharTok{$}\NormalTok{best\_fitness) }\SpecialCharTok{/}\NormalTok{ random\_fitness }\SpecialCharTok{*} \DecValTok{100}
+\NormalTok{enhanced\_improvement }\OtherTok{\textless{}{-}}\NormalTok{ (random\_fitness }\SpecialCharTok{{-}}\NormalTok{ ga\_enhanced}\SpecialCharTok{$}\NormalTok{best\_fitness) }\SpecialCharTok{/}\NormalTok{ random\_fitness }\SpecialCharTok{*} \DecValTok{100}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Basic GA improvement:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f\%\%"}\NormalTok{, basic\_improvement), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Basic GA improvement: {-}4292.97\%}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Enhanced GA improvement:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2f\%\%"}\NormalTok{, enhanced\_improvement), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Enhanced GA improvement: {-}4307.69\%}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Convergence Diagnostics}\label{convergence-diagnostics}
+
+The enhanced genetic algorithm provides comprehensive convergence
+diagnostics to help users understand optimization behavior.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Generate convergence diagnostics for the enhanced GA}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Convergence Diagnostics for Enhanced GA:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Convergence Diagnostics for Enhanced GA:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"=======================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} =======================================}
+
+\NormalTok{diags }\OtherTok{\textless{}{-}} \FunctionTok{convergence\_diagnostics}\NormalTok{(ga\_enhanced, }\AttributeTok{plot =} \ConstantTok{FALSE}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Convergence Status:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Convergence Status:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Converged:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{convergence\_status}\SpecialCharTok{$}\NormalTok{converged, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Converged: FALSE}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Reason:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{convergence\_status}\SpecialCharTok{$}\NormalTok{reason, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Reason: convergence criteria not met}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Window size:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{window\_size, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Window size: 15}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Data points:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{data\_points, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Data points: 15}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Convergence Metrics:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Convergence Metrics:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Fitness stability:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{fitness\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Fitness stability: 0.004162}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Diversity stability:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{diversity\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Diversity stability: 0.001903}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Mean improvement rate:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{mean\_improvement\_rate), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Mean improvement rate: 0.004157}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Variance stability:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{variance\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Variance stability: 0.007142}
+
+\ControlFlowTok{if}\NormalTok{ (}\FunctionTok{length}\NormalTok{(diags}\SpecialCharTok{$}\NormalTok{recommendations) }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Recommendations:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(diags}\SpecialCharTok{$}\NormalTok{recommendations)) \{}
+    \FunctionTok{cat}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"{-}"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{recommendations[i], }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{))}
+\NormalTok{  \}}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{No specific recommendations {-} optimization appears satisfactory.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} No specific recommendations {-} optimization appears satisfactory.}
+
+\CommentTok{\# Show restart history if any restarts occurred}
+\ControlFlowTok{if}\NormalTok{ (ga\_enhanced}\SpecialCharTok{$}\NormalTok{restart\_count }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Restart History:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{ga\_enhanced}\SpecialCharTok{$}\NormalTok{restart\_count) \{}
+\NormalTok{    restart\_info }\OtherTok{\textless{}{-}}\NormalTok{ ga\_enhanced}\SpecialCharTok{$}\NormalTok{restart\_history[[i]]}
+    \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"Restart \%d: Generation \%d, Fitness \%.6f, Reason: \%s}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{,}
+\NormalTok{                i, restart\_info}\SpecialCharTok{$}\NormalTok{generation, restart\_info}\SpecialCharTok{$}\NormalTok{best\_fitness,}
+\NormalTok{                restart\_info}\SpecialCharTok{$}\NormalTok{convergence\_reason))}
+\NormalTok{  \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot GA convergence comparison}
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+
+\CommentTok{\# Plot fitness history for both algorithms}
+\FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(ga\_basic}\SpecialCharTok{$}\NormalTok{fitness\_history), ga\_basic}\SpecialCharTok{$}\NormalTok{fitness\_history[, }\StringTok{"best"}\NormalTok{],}
+     \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Best Fitness"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"GA Convergence Comparison"}\NormalTok{)}
+\FunctionTok{lines}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(ga\_enhanced}\SpecialCharTok{$}\NormalTok{fitness\_history), ga\_enhanced}\SpecialCharTok{$}\NormalTok{fitness\_history[, }\StringTok{"best"}\NormalTok{],}
+      \AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }\AttributeTok{legend =} \FunctionTok{c}\NormalTok{(}\StringTok{"Basic GA"}\NormalTok{, }\StringTok{"Enhanced GA"}\NormalTok{), }
+       \AttributeTok{col =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+
+\CommentTok{\# Plot population diversity if available}
+\ControlFlowTok{if}\NormalTok{ (}\StringTok{"diversity"} \SpecialCharTok{\%in\%} \FunctionTok{names}\NormalTok{(ga\_enhanced}\SpecialCharTok{$}\NormalTok{population\_stats[[}\DecValTok{1}\NormalTok{]])) \{}
+\NormalTok{  basic\_diversity }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ga\_basic}\SpecialCharTok{$}\NormalTok{population\_stats, }\ControlFlowTok{function}\NormalTok{(x) x}\SpecialCharTok{$}\NormalTok{diversity)}
+\NormalTok{  enhanced\_diversity }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ga\_enhanced}\SpecialCharTok{$}\NormalTok{population\_stats, }\ControlFlowTok{function}\NormalTok{(x) x}\SpecialCharTok{$}\NormalTok{diversity)}
+  
+  \FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(basic\_diversity), basic\_diversity,}
+       \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+       \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Population Diversity"}\NormalTok{,}
+       \AttributeTok{main =} \StringTok{"Population Diversity Over Time"}\NormalTok{)}
+  \FunctionTok{lines}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(enhanced\_diversity), enhanced\_diversity, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+  \FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+  \FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }\AttributeTok{legend =} \FunctionTok{c}\NormalTok{(}\StringTok{"Basic GA"}\NormalTok{, }\StringTok{"Enhanced GA"}\NormalTok{), }
+         \AttributeTok{col =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{), }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{STPGA-package_files/figure-latex/plot-ga-convergence-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Multi-Objective
+Optimization}\label{multi-objective-optimization}
+
+STPGA supports multi-objective optimization to find Pareto-optimal
+solutions.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Multi{-}objective demonstration: evaluate trade{-}offs between criteria}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}Objective Analysis}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Multi{-}Objective Analysis}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"========================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ========================}
+
+\CommentTok{\# Generate several solutions and evaluate on multiple criteria}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{789}\NormalTok{)}
+\NormalTok{n\_solutions }\OtherTok{\textless{}{-}} \DecValTok{8}
+\NormalTok{solutions }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{()}
+\NormalTok{pev\_values }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_solutions)}
+\NormalTok{cd\_values }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n\_solutions)}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_solutions) \{}
+\NormalTok{  solutions[[i]] }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, n\_select)}
+\NormalTok{  pev\_values[i] }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(solutions[[i]], test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{  cd\_values[i] }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(solutions[[i]], test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{\}}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}criteria evaluation:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Multi{-}criteria evaluation:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Solution | PEV Mean | CD Mean}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Solution | PEV Mean | CD Mean}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_solutions) \{}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%8d | \%8.6f | \%7.6f}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, i, pev\_values[i], cd\_values[i]))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{}        1 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        2 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        3 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        4 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        5 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        6 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        7 | 0.025000 | 0.025000}
+\CommentTok{\#\textgreater{}        8 | 0.025000 | 0.025000}
+
+\CommentTok{\# Find solutions that are good for both criteria}
+\NormalTok{combined\_rank }\OtherTok{\textless{}{-}} \FunctionTok{rank}\NormalTok{(pev\_values) }\SpecialCharTok{+} \FunctionTok{rank}\NormalTok{(cd\_values)}
+\NormalTok{best\_combined }\OtherTok{\textless{}{-}} \FunctionTok{which.min}\NormalTok{(combined\_rank)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Best combined solution (lowest sum of ranks):"}\NormalTok{, best\_combined, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Best combined solution (lowest sum of ranks): 5}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PEV:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_values[best\_combined]), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PEV: 0.025000}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"CD: "}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_values[best\_combined]), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} CD:  0.025000}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot the trade{-}off between criteria}
+\ControlFlowTok{if}\NormalTok{ (}\FunctionTok{length}\NormalTok{(pev\_values) }\SpecialCharTok{\textgreater{}} \DecValTok{1} \SpecialCharTok{\&\&} \FunctionTok{length}\NormalTok{(cd\_values) }\SpecialCharTok{\textgreater{}} \DecValTok{1}\NormalTok{) \{}
+  \FunctionTok{plot}\NormalTok{(pev\_values, cd\_values,}
+       \AttributeTok{pch =} \DecValTok{19}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.2}\NormalTok{,}
+       \AttributeTok{xlab =} \StringTok{"PEV Mean (normalized)"}\NormalTok{, }
+       \AttributeTok{ylab =} \StringTok{"Cook\textquotesingle{}s Distance Mean (normalized)"}\NormalTok{,}
+       \AttributeTok{main =} \StringTok{"Trade{-}off: PEV vs Cook\textquotesingle{}s Distance"}\NormalTok{)}
+  \FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+  
+  \CommentTok{\# Highlight best combined solution}
+  \FunctionTok{points}\NormalTok{(pev\_values[best\_combined], cd\_values[best\_combined], }
+         \AttributeTok{pch =} \DecValTok{17}\NormalTok{, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.5}\NormalTok{)}
+  
+  \CommentTok{\# Add random solution for reference}
+\NormalTok{  random\_cd }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(random\_selection, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+  \FunctionTok{points}\NormalTok{(random\_fitness, random\_cd, }\AttributeTok{pch =} \DecValTok{15}\NormalTok{, }\AttributeTok{col =} \StringTok{"gray"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.5}\NormalTok{)}
+  
+  \CommentTok{\# Add labels for a few points}
+  \FunctionTok{text}\NormalTok{(pev\_values[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{3}\NormalTok{], cd\_values[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{3}\NormalTok{], }\AttributeTok{labels =} \DecValTok{1}\SpecialCharTok{:}\DecValTok{3}\NormalTok{, }\AttributeTok{pos =} \DecValTok{3}\NormalTok{, }\AttributeTok{cex =} \FloatTok{0.8}\NormalTok{)}
+  
+  \FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }
+         \AttributeTok{legend =} \FunctionTok{c}\NormalTok{(}\StringTok{"Solutions"}\NormalTok{, }\StringTok{"Best Combined"}\NormalTok{, }\StringTok{"Random"}\NormalTok{),}
+         \AttributeTok{pch =} \FunctionTok{c}\NormalTok{(}\DecValTok{19}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{15}\NormalTok{),}
+         \AttributeTok{col =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{, }\StringTok{"gray"}\NormalTok{))}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{STPGA-package_files/figure-latex/plot-criteria-tradeoff-1.pdf}}
+
+\section{Advanced Features}\label{advanced-features}
+
+\subsection{Ridge Regularization
+Effects}\label{ridge-regularization-effects}
+
+The package uses ridge regularization for numerical stability. Let's
+examine its effects:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Test different ridge parameters}
+\NormalTok{lambda\_values }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{1e{-}8}\NormalTok{, }\FloatTok{1e{-}6}\NormalTok{, }\FloatTok{1e{-}4}\NormalTok{, }\FloatTok{1e{-}2}\NormalTok{)}
+\NormalTok{train\_ridge }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{50}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Ridge Regularization Effects:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Ridge Regularization Effects:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"=============================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} =============================}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Lambda}\SpecialCharTok{\textbackslash{}t\textbackslash{}t}\StringTok{A{-}optimality}\SpecialCharTok{\textbackslash{}t}\StringTok{PEV Mean}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Lambda       A{-}optimality    PEV Mean}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}t\textbackslash{}t}\StringTok{{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}t}\StringTok{{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-}{-}{-}{-}{-}{-}       {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}    {-}{-}{-}{-}{-}{-}{-}{-}}
+
+\ControlFlowTok{for}\NormalTok{ (lambda }\ControlFlowTok{in}\NormalTok{ lambda\_values) \{}
+\NormalTok{  aopt\_ridge }\OtherTok{\textless{}{-}} \FunctionTok{a\_optimality}\NormalTok{(train\_ridge, test\_set, Wheat.PC5, }\AttributeTok{lambda =}\NormalTok{ lambda)}
+\NormalTok{  pev\_ridge }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_ridge, test\_set, Wheat.PC5, }\AttributeTok{lambda =}\NormalTok{ lambda)}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.0e}\SpecialCharTok{\textbackslash{}t\textbackslash{}t}\StringTok{\%.6e}\SpecialCharTok{\textbackslash{}t}\StringTok{\%.6e}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, lambda, aopt\_ridge, pev\_ridge))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} 1e{-}08        7.821194e{-}04    1.126249e+00}
+\CommentTok{\#\textgreater{} 1e{-}06        7.821194e{-}04    1.126249e+00}
+\CommentTok{\#\textgreater{} 1e{-}04        7.821193e{-}04    1.126249e+00}
+\CommentTok{\#\textgreater{} 1e{-}02        7.821172e{-}04    1.126249e+00}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Matrix Stability and
+Conditioning}\label{matrix-stability-and-conditioning}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Demonstrate numerical stability features}
+\NormalTok{train\_stability }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{80}\NormalTok{)}
+
+\CommentTok{\# Check matrix conditioning using first 5 PCs}
+\NormalTok{P\_train }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.PC5[train\_stability, ]}
+\NormalTok{xtx }\OtherTok{\textless{}{-}} \FunctionTok{crossprod}\NormalTok{(P\_train)}
+\NormalTok{condition\_number }\OtherTok{\textless{}{-}} \FunctionTok{kappa}\NormalTok{(xtx)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Matrix Conditioning:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Matrix Conditioning:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"===================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ===================}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Training set size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(train\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Training set size: 80}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Number of principal components:"}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(Wheat.PC5), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Number of principal components: 5}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"X\textquotesingle{}X condition number:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, condition\_number), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} X\textquotesingle{}X condition number: 7.67e+00}
+
+\ControlFlowTok{if}\NormalTok{ (condition\_number }\SpecialCharTok{\textgreater{}} \FloatTok{1e12}\NormalTok{) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Matrix is ill{-}conditioned {-} ridge regularization recommended}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"Matrix is well{-}conditioned}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} Matrix is well{-}conditioned}
+
+\CommentTok{\# Test with extreme case (very small training set)}
+\NormalTok{train\_extreme }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{10}\NormalTok{)  }\CommentTok{\# Very small training set}
+\NormalTok{P\_extreme }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.PC5[train\_extreme, ]  }\CommentTok{\# Use all 5 PCs}
+\NormalTok{xtx\_extreme }\OtherTok{\textless{}{-}} \FunctionTok{crossprod}\NormalTok{(P\_extreme)}
+\NormalTok{condition\_extreme }\OtherTok{\textless{}{-}} \FunctionTok{kappa}\NormalTok{(xtx\_extreme)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Extreme case (n \textless{}\textless{} p):}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Extreme case (n \textless{}\textless{} p):}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Training set size:"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(P\_extreme), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Training set size: 10}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Number of predictors:"}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(P\_extreme), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Number of predictors: 5}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Condition number:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.2e"}\NormalTok{, condition\_extreme), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Condition number: 9.53e+01}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Practical Guidelines}\label{practical-guidelines}
+
+\subsection{Training Set Size
+Recommendations}\label{training-set-size-recommendations}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Analyze the relationship between training set size and prediction quality}
+\NormalTok{sizes }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{20}\NormalTok{, }\DecValTok{120}\NormalTok{, }\AttributeTok{by =} \DecValTok{20}\NormalTok{)}
+\NormalTok{pev\_by\_size }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(}\FunctionTok{length}\NormalTok{(sizes))}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Training Set Size Analysis:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Training Set Size Analysis:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"===========================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ===========================}
+
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{999}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(sizes)) \{}
+\NormalTok{  train\_size }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, sizes[i])}
+\NormalTok{  pev\_by\_size[i] }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(train\_size, test\_set, Wheat.PC5, }\AttributeTok{normalized =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{\}}
+
+\CommentTok{\# Create recommendations table}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Size}\SpecialCharTok{\textbackslash{}t}\StringTok{Normalized PEV}\SpecialCharTok{\textbackslash{}t}\StringTok{Relative to n=20}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Size Normalized PEV  Relative to n=20}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}t}\StringTok{{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}t}\StringTok{{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-}{-}{-}{-} {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}  {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(sizes)) \{}
+\NormalTok{  relative }\OtherTok{\textless{}{-}}\NormalTok{ pev\_by\_size[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{/}\NormalTok{ pev\_by\_size[i]}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%4d}\SpecialCharTok{\textbackslash{}t}\StringTok{\%12.6f}\SpecialCharTok{\textbackslash{}t}\StringTok{\%12.2fx}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, sizes[i], pev\_by\_size[i], relative))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{}   20     0.025000            1.00x}
+\CommentTok{\#\textgreater{}   40     0.025000            1.00x}
+\CommentTok{\#\textgreater{}   60     0.025000            1.00x}
+\CommentTok{\#\textgreater{}   80     0.025000            1.00x}
+\CommentTok{\#\textgreater{}  100     0.025000            1.00x}
+\CommentTok{\#\textgreater{}  120     0.025000            1.00x}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot the relationship}
+\FunctionTok{plot}\NormalTok{(sizes, pev\_by\_size, }\AttributeTok{type =} \StringTok{"b"}\NormalTok{, }\AttributeTok{pch =} \DecValTok{19}\NormalTok{, }\AttributeTok{col =} \StringTok{"darkblue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Training Set Size"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Normalized PEV"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"Effect of Training Set Size on Prediction Quality"}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Add trend line}
+\NormalTok{lm\_fit }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(pev\_by\_size }\SpecialCharTok{\textasciitilde{}} \FunctionTok{I}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\NormalTok{sizes))}
+\FunctionTok{lines}\NormalTok{(sizes, }\FunctionTok{predict}\NormalTok{(lm\_fit), }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{2}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{)}
+
+\CommentTok{\# Add recommendations}
+\FunctionTok{abline}\NormalTok{(}\AttributeTok{v =} \DecValTok{60}\NormalTok{, }\AttributeTok{col =} \StringTok{"green"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{3}\NormalTok{)}
+\FunctionTok{text}\NormalTok{(}\DecValTok{65}\NormalTok{, }\FunctionTok{max}\NormalTok{(pev\_by\_size) }\SpecialCharTok{*} \FloatTok{0.9}\NormalTok{, }\StringTok{"Recommended}\SpecialCharTok{\textbackslash{}n}\StringTok{Minimum"}\NormalTok{, }\AttributeTok{col =} \StringTok{"green"}\NormalTok{, }\AttributeTok{pos =} \DecValTok{4}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{STPGA-package_files/figure-latex/plot-size-effect-1.pdf}}
+
+\subsection{Criterion Selection Guide}\label{criterion-selection-guide}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Compare all criteria on the same training set for guidance}
+\NormalTok{train\_guide }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates, }\DecValTok{60}\NormalTok{)}
+
+\NormalTok{criteria\_comparison }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Criterion =} \FunctionTok{c}\NormalTok{(}\StringTok{"A{-}optimality"}\NormalTok{, }\StringTok{"D{-}optimality"}\NormalTok{, }\StringTok{"E{-}optimality"}\NormalTok{, }
+                \StringTok{"PEV Mean"}\NormalTok{, }\StringTok{"PEV Max"}\NormalTok{, }\StringTok{"Cook\textquotesingle{}s Distance"}\NormalTok{),}
+  \AttributeTok{Modern\_Name =} \FunctionTok{c}\NormalTok{(}\StringTok{"a\_optimality"}\NormalTok{, }\StringTok{"d\_optimality"}\NormalTok{, }\StringTok{"e\_optimality"}\NormalTok{,}
+                  \StringTok{"pev\_mean"}\NormalTok{, }\StringTok{"pev\_max"}\NormalTok{, }\StringTok{"cd\_mean"}\NormalTok{),}
+  \AttributeTok{Use\_Case =} \FunctionTok{c}\NormalTok{(}\StringTok{"Average prediction variance"}\NormalTok{, }\StringTok{"Generalized variance"}\NormalTok{,}
+               \StringTok{"Maximum variance"}\NormalTok{, }\StringTok{"Prediction accuracy"}\NormalTok{, }
+               \StringTok{"Worst{-}case prediction"}\NormalTok{, }\StringTok{"Influential observations"}\NormalTok{),}
+  \AttributeTok{stringsAsFactors =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Criterion Selection Guide:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Criterion Selection Guide:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"=========================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} =========================}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(criteria\_comparison)) \{}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}15s: \%s}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{, }
+\NormalTok{              criteria\_comparison}\SpecialCharTok{$}\NormalTok{Criterion[i], }
+\NormalTok{              criteria\_comparison}\SpecialCharTok{$}\NormalTok{Use\_Case[i]))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} A{-}optimality   : Average prediction variance}
+\CommentTok{\#\textgreater{} D{-}optimality   : Generalized variance}
+\CommentTok{\#\textgreater{} E{-}optimality   : Maximum variance}
+\CommentTok{\#\textgreater{} PEV Mean       : Prediction accuracy}
+\CommentTok{\#\textgreater{} PEV Max        : Worst{-}case prediction}
+\CommentTok{\#\textgreater{} Cook\textquotesingle{}s Distance: Influential observations}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{For genomic selection, we recommend:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} For genomic selection, we recommend:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} pev\_mean\_normalized: General prediction accuracy}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} pev\_mean\_normalized: General prediction accuracy}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} pev\_mean\_mm: When kinship information is available}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} pev\_mean\_mm: When kinship information is available}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Multi{-}objective: Balance multiple criteria}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Multi{-}objective: Balance multiple criteria}
+\end{Highlighting}
+\end{Shaded}
+
+\section{Conclusion}\label{conclusion}
+
+The STPGA package provides a comprehensive toolkit for optimizing
+training set selection in genomic prediction and experimental design.
+Key features include:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Modern API}: Clean, intuitive function names with
+  comprehensive documentation
+\item
+  \textbf{Multiple Criteria}: Classical optimality criteria plus
+  prediction-focused measures
+\item
+  \textbf{Mixed Models}: Support for genomic selection with kinship
+  matrices
+\item
+  \textbf{Genetic Algorithms}: Efficient single and multi-objective
+  optimization
+\item
+  \textbf{Numerical Stability}: Ridge regularization and robust matrix
+  operations
+\item
+  \textbf{Flexibility}: Unified interface with legacy compatibility
+\end{enumerate}
+
+\subsection{Best Practices}\label{best-practices}
+
+\subsubsection{Criterion Selection}\label{criterion-selection}
+
+\begin{itemize}
+\tightlist
+\item
+  Use \texttt{pev\_mean\_normalized} for general prediction accuracy
+  optimization
+\item
+  Consider \texttt{pev\_mean\_mm} when genetic relationships are
+  available
+\item
+  Apply multi-objective optimization when balancing multiple criteria
+\item
+  Use ridge regularization (λ ≥ 1e-6) for numerical stability
+\end{itemize}
+
+\subsubsection{Training Set Size}\label{training-set-size}
+
+\begin{itemize}
+\tightlist
+\item
+  Select training sets of at least 30-50\% of the candidate pool
+\item
+  For genomic selection, aim for training sets ≥ 100 individuals when
+  possible
+\item
+  Balance computational cost with prediction accuracy
+\end{itemize}
+
+\subsubsection{Genetic Algorithm
+Configuration}\label{genetic-algorithm-configuration}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Selection Methods}:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Use \texttt{"tournament"} for balanced exploration/exploitation
+  \item
+    Use \texttt{"rank"} with \texttt{selection\_pressure\ =\ 1.2-1.8}
+    for controlled selection pressure
+  \item
+    Use \texttt{"hybrid"} for combining multiple selection strategies
+  \end{itemize}
+\item
+  \textbf{Convergence Settings}:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Set \texttt{convergence\_window\_multiplier\ =\ 3-5} for robust
+    convergence detection
+  \item
+    Enable restart with \texttt{enable\_restart\ =\ TRUE} and
+    \texttt{restart\_threshold\ =\ 0.5-0.7}
+  \item
+    Use \texttt{max\_restarts\ =\ 1-2} to avoid excessive computation
+  \end{itemize}
+\item
+  \textbf{Population Parameters}:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Use population sizes of 50-200 for most problems
+  \item
+    Set \texttt{niterations\ =\ 100-500} depending on problem complexity
+  \item
+    Monitor convergence diagnostics to adjust parameters
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Validation and
+Diagnostics}\label{validation-and-diagnostics}
+
+\begin{itemize}
+\tightlist
+\item
+  Always check convergence diagnostics with
+  \texttt{convergence\_diagnostics()}
+\item
+  Use cross-validation or independent test sets to validate results
+\item
+  Monitor restart history to detect optimization difficulties
+\item
+  Adjust parameters based on convergence recommendations
+\end{itemize}
+
+\section{Genetic Algorithm Examples}\label{genetic-algorithm-examples}
+
+\subsection{Single-Objective Genetic
+Algorithm}\label{single-objective-genetic-algorithm}
+
+The core genetic algorithm optimizes a single criterion for training set
+selection.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Single{-}Objective Genetic Algorithm Example}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Single{-}Objective Genetic Algorithm Example}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"==========================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ==========================================}
+
+\CommentTok{\# Use a focused subset for GA demonstration}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{2024}\NormalTok{)}
+\NormalTok{ga\_subset\_indices }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(Wheat.M), }\DecValTok{150}\NormalTok{)}
+\NormalTok{M\_ga }\OtherTok{\textless{}{-}}\NormalTok{ Wheat.M[ga\_subset\_indices, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{50}\NormalTok{]}
+
+\CommentTok{\# Create principal components for GA optimization}
+\NormalTok{pca\_ga }\OtherTok{\textless{}{-}} \FunctionTok{prcomp}\NormalTok{(M\_ga, }\AttributeTok{center =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{scale. =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{PC\_ga }\OtherTok{\textless{}{-}}\NormalTok{ pca\_ga}\SpecialCharTok{$}\NormalTok{x[, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{6}\NormalTok{]}
+\FunctionTok{rownames}\NormalTok{(PC\_ga) }\OtherTok{\textless{}{-}} \FunctionTok{rownames}\NormalTok{(M\_ga)}
+
+\CommentTok{\# Define experimental setup}
+\NormalTok{all\_individuals }\OtherTok{\textless{}{-}} \FunctionTok{rownames}\NormalTok{(PC\_ga)}
+\NormalTok{test\_set\_ga }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(all\_individuals, }\DecValTok{25}\NormalTok{)}
+\NormalTok{candidates\_ga }\OtherTok{\textless{}{-}} \FunctionTok{setdiff}\NormalTok{(all\_individuals, test\_set\_ga)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"GA Setup:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} GA Setup:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Total individuals:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(all\_individuals), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Total individuals: 150}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Candidates:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(candidates\_ga), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }
+\CommentTok{\#\textgreater{} {-} Candidates: 125}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Test set:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(test\_set\_ga), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Test set: 25}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Target training size: 30}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Target training size: 30}
+
+\CommentTok{\# Run single{-}objective GA with enhanced features}
+\NormalTok{ga\_result }\OtherTok{\textless{}{-}} \FunctionTok{subset\_ga}\NormalTok{(}
+  \AttributeTok{P =}\NormalTok{ PC\_ga,}
+  \AttributeTok{Candidates =}\NormalTok{ candidates\_ga,}
+  \AttributeTok{Test =}\NormalTok{ test\_set\_ga,}
+  \AttributeTok{ntoselect =} \DecValTok{30}\NormalTok{,}
+  \AttributeTok{npop =} \DecValTok{50}\NormalTok{,}
+  \AttributeTok{niterations =} \DecValTok{100}\NormalTok{,}
+  \AttributeTok{criterion =} \StringTok{"pev\_mean"}\NormalTok{,}
+  \AttributeTok{selection\_method =} \StringTok{"rank"}\NormalTok{,}
+  \AttributeTok{selection\_pressure =} \FloatTok{1.4}\NormalTok{,}
+  \AttributeTok{enable\_restart =} \ConstantTok{TRUE}\NormalTok{,}
+  \AttributeTok{restart\_threshold =} \FloatTok{0.6}\NormalTok{,}
+  \AttributeTok{max\_restarts =} \DecValTok{2}\NormalTok{,}
+  \AttributeTok{convergence\_window\_multiplier =} \DecValTok{4}\NormalTok{,}
+  \AttributeTok{verbose =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Single{-}Objective GA Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Single{-}Objective GA Results:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Best fitness (PEV):"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, ga\_result}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Best fitness (PEV): 1.171862}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Convergence generation:"}\NormalTok{, ga\_result}\SpecialCharTok{$}\NormalTok{convergence\_generation, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Convergence generation: 100}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Total generations:"}\NormalTok{, ga\_result}\SpecialCharTok{$}\NormalTok{total\_generations, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Total generations: 100}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Restart count:"}\NormalTok{, ga\_result}\SpecialCharTok{$}\NormalTok{restart\_count, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Restart count: 0}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Selected training set size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(ga\_result}\SpecialCharTok{$}\NormalTok{best\_solution), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Selected training set size: 30}
+
+\ControlFlowTok{if}\NormalTok{ (ga\_result}\SpecialCharTok{$}\NormalTok{restart\_count }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Restart improved fitness by:"}\NormalTok{, }
+      \FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, ga\_result}\SpecialCharTok{$}\NormalTok{restart\_history[[}\DecValTok{1}\NormalTok{]]}\SpecialCharTok{$}\NormalTok{best\_fitness }\SpecialCharTok{{-}}\NormalTok{ ga\_result}\SpecialCharTok{$}\NormalTok{best\_fitness), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Plot GA convergence}
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+
+\CommentTok{\# Fitness evolution}
+\FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(ga\_result}\SpecialCharTok{$}\NormalTok{fitness\_history), ga\_result}\SpecialCharTok{$}\NormalTok{fitness\_history[, }\StringTok{"best"}\NormalTok{],}
+     \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Best Fitness (PEV)"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"Single{-}Objective GA Convergence"}\NormalTok{)}
+\FunctionTok{lines}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(ga\_result}\SpecialCharTok{$}\NormalTok{fitness\_history), ga\_result}\SpecialCharTok{$}\NormalTok{fitness\_history[, }\StringTok{"mean"}\NormalTok{],}
+      \AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{2}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{1}\NormalTok{)}
+
+\CommentTok{\# Mark restart points}
+\ControlFlowTok{if}\NormalTok{ (ga\_result}\SpecialCharTok{$}\NormalTok{restart\_count }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{ga\_result}\SpecialCharTok{$}\NormalTok{restart\_count) \{}
+    \FunctionTok{abline}\NormalTok{(}\AttributeTok{v =}\NormalTok{ ga\_result}\SpecialCharTok{$}\NormalTok{restart\_history[[i]]}\SpecialCharTok{$}\NormalTok{generation, }\AttributeTok{col =} \StringTok{"green"}\NormalTok{, }\AttributeTok{lty =} \DecValTok{3}\NormalTok{)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\FunctionTok{legend}\NormalTok{(}\StringTok{"topright"}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\StringTok{"Best"}\NormalTok{, }\StringTok{"Mean"}\NormalTok{, }\StringTok{"Restart"}\NormalTok{), }
+       \AttributeTok{col =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{, }\StringTok{"green"}\NormalTok{), }\AttributeTok{lty =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{), }\AttributeTok{lwd =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Population diversity}
+\NormalTok{diversity\_hist }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ga\_result}\SpecialCharTok{$}\NormalTok{population\_stats, }\ControlFlowTok{function}\NormalTok{(x) x}\SpecialCharTok{$}\NormalTok{diversity)}
+\FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(diversity\_hist), diversity\_hist,}
+     \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"purple"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Population Diversity"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"GA Population Diversity"}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{STPGA-package_files/figure-latex/plot-single-ga-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Multi-Objective Genetic Algorithm
+(NSGA-II)}\label{multi-objective-genetic-algorithm-nsga-ii}
+
+Multi-objective optimization simultaneously optimizes multiple criteria
+using NSGA-II algorithm.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}Objective Genetic Algorithm Example}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"=========================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# Define multiple criteria for optimization}
+\NormalTok{criteria\_list }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"pev\_mean"}\NormalTok{, }\StringTok{"pev\_max"}\NormalTok{, }\StringTok{"cd\_mean"}\NormalTok{)}
+\NormalTok{criteria\_types }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\ConstantTok{FALSE}\NormalTok{, }\ConstantTok{FALSE}\NormalTok{, }\ConstantTok{TRUE}\NormalTok{)  }\CommentTok{\# FALSE = minimize, TRUE = maximize}
+\NormalTok{plot\_directions }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{)  }\CommentTok{\# For plotting: minimize = {-}1, maximize = 1}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}objective criteria:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"1. PEV Mean (minimize) {-} Average prediction accuracy}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"2. PEV Max (minimize) {-} Worst{-}case prediction accuracy}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{) }
+\FunctionTok{cat}\NormalTok{(}\StringTok{"3. Cook\textquotesingle{}s Distance Mean (maximize) {-} Model robustness}\SpecialCharTok{\textbackslash{}n\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# Run multi{-}objective GA}
+\NormalTok{mo\_ga\_result }\OtherTok{\textless{}{-}} \FunctionTok{subset\_ga\_multiobjective}\NormalTok{(}
+  \AttributeTok{Pcs =}\NormalTok{ PC\_ga,}
+  \AttributeTok{candidates =}\NormalTok{ candidates\_ga,}
+  \AttributeTok{test =}\NormalTok{ test\_set\_ga,}
+  \AttributeTok{ntoselect =} \DecValTok{30}\NormalTok{,}
+  \AttributeTok{criteria =}\NormalTok{ criteria\_list,}
+  \AttributeTok{criteria\_types =}\NormalTok{ criteria\_types,}
+  \AttributeTok{plot\_directions =}\NormalTok{ plot\_directions,}
+  \AttributeTok{npop =} \DecValTok{60}\NormalTok{,}
+  \AttributeTok{niterations =} \DecValTok{80}\NormalTok{,}
+  \AttributeTok{mutprob =} \FloatTok{0.9}\NormalTok{,}
+  \AttributeTok{mutintensity =} \DecValTok{2}\NormalTok{,}
+  \AttributeTok{lambda =} \FloatTok{1e{-}6}\NormalTok{,}
+  \AttributeTok{plot\_iterations =} \ConstantTok{FALSE}\NormalTok{,}
+  \AttributeTok{mc.cores =} \DecValTok{1}\NormalTok{,}
+  \AttributeTok{archive\_size =} \DecValTok{100}\NormalTok{,}
+  \AttributeTok{diversity\_maintenance =} \ConstantTok{TRUE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}Objective GA Results:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Archive size (Pareto solutions):"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(mo\_ga\_result}\SpecialCharTok{$}\NormalTok{archive), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Final population size:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(mo\_ga\_result}\SpecialCharTok{$}\NormalTok{population), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Total generations:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(mo\_ga\_result}\SpecialCharTok{$}\NormalTok{population), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# Analyze Pareto front}
+\NormalTok{archive }\OtherTok{\textless{}{-}}\NormalTok{ mo\_ga\_result}\SpecialCharTok{$}\NormalTok{archive}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Pareto Front Analysis:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Solutions on Pareto front:"}\NormalTok{, }\FunctionTok{nrow}\NormalTok{(archive), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Mean range: ["}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{min}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{])), }\StringTok{", "}\NormalTok{, }
+    \FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{])), }\StringTok{"]}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Max range: ["}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{min}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{])), }\StringTok{", "}\NormalTok{, }
+    \FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{])), }\StringTok{"]}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} CD Mean range: ["}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{min}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{])), }\StringTok{", "}\NormalTok{, }
+    \FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.4f"}\NormalTok{, }\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{])), }\StringTok{"]}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# Find compromise solution (closest to ideal point)}
+\NormalTok{ideal\_point }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{min}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{]), }\FunctionTok{min}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{]), }\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{]))}
+\NormalTok{distances }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(archive, }\DecValTok{1}\NormalTok{, }\ControlFlowTok{function}\NormalTok{(x) \{}
+  \CommentTok{\# Normalize and compute distance to ideal}
+\NormalTok{  norm\_x }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{((x[}\DecValTok{1}\NormalTok{] }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{])) }\SpecialCharTok{/}\NormalTok{ (}\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{]) }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{])),}
+\NormalTok{              (x[}\DecValTok{2}\NormalTok{] }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{])) }\SpecialCharTok{/}\NormalTok{ (}\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{]) }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{])),}
+\NormalTok{              (}\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{]) }\SpecialCharTok{{-}}\NormalTok{ x[}\DecValTok{3}\NormalTok{]) }\SpecialCharTok{/}\NormalTok{ (}\FunctionTok{max}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{]) }\SpecialCharTok{{-}} \FunctionTok{min}\NormalTok{(archive[,}\DecValTok{3}\NormalTok{])))}
+  \FunctionTok{sqrt}\NormalTok{(}\FunctionTok{sum}\NormalTok{(norm\_x}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}
+\NormalTok{\})}
+
+\NormalTok{best\_compromise\_idx }\OtherTok{\textless{}{-}} \FunctionTok{which.min}\NormalTok{(distances)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Best Compromise Solution:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, archive[best\_compromise\_idx, }\DecValTok{1}\NormalTok{]), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Max:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, archive[best\_compromise\_idx, }\DecValTok{2}\NormalTok{]), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} CD Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, archive[best\_compromise\_idx, }\DecValTok{3}\NormalTok{]), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Create comprehensive multi{-}objective plots}
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+
+\CommentTok{\# 2D Pareto front projections}
+\NormalTok{archive }\OtherTok{\textless{}{-}}\NormalTok{ mo\_ga\_result}\SpecialCharTok{$}\NormalTok{archive}
+
+\CommentTok{\# PEV Mean vs PEV Max}
+\FunctionTok{plot}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{], archive[,}\DecValTok{2}\NormalTok{], }\AttributeTok{pch =} \DecValTok{19}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"PEV Mean (minimize)"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"PEV Max (minimize)"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"Pareto Front: PEV Mean vs PEV Max"}\NormalTok{)}
+\FunctionTok{points}\NormalTok{(archive[best\_compromise\_idx, }\DecValTok{1}\NormalTok{], archive[best\_compromise\_idx, }\DecValTok{2}\NormalTok{], }
+       \AttributeTok{pch =} \DecValTok{17}\NormalTok{, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{cex =} \DecValTok{2}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# PEV Mean vs CD Mean  }
+\FunctionTok{plot}\NormalTok{(archive[,}\DecValTok{1}\NormalTok{], archive[,}\DecValTok{3}\NormalTok{], }\AttributeTok{pch =} \DecValTok{19}\NormalTok{, }\AttributeTok{col =} \StringTok{"green"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"PEV Mean (minimize)"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Cook\textquotesingle{}s Distance Mean (maximize)"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"Pareto Front: PEV Mean vs Cook\textquotesingle{}s Distance"}\NormalTok{)}
+\FunctionTok{points}\NormalTok{(archive[best\_compromise\_idx, }\DecValTok{1}\NormalTok{], archive[best\_compromise\_idx, }\DecValTok{3}\NormalTok{], }
+       \AttributeTok{pch =} \DecValTok{17}\NormalTok{, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{cex =} \DecValTok{2}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# PEV Max vs CD Mean}
+\FunctionTok{plot}\NormalTok{(archive[,}\DecValTok{2}\NormalTok{], archive[,}\DecValTok{3}\NormalTok{], }\AttributeTok{pch =} \DecValTok{19}\NormalTok{, }\AttributeTok{col =} \StringTok{"purple"}\NormalTok{, }\AttributeTok{cex =} \FloatTok{1.2}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"PEV Max (minimize)"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Cook\textquotesingle{}s Distance Mean (maximize)"}\NormalTok{,}
+     \AttributeTok{main =} \StringTok{"Pareto Front: PEV Max vs Cook\textquotesingle{}s Distance"}\NormalTok{)}
+\FunctionTok{points}\NormalTok{(archive[best\_compromise\_idx, }\DecValTok{2}\NormalTok{], archive[best\_compromise\_idx, }\DecValTok{3}\NormalTok{], }
+       \AttributeTok{pch =} \DecValTok{17}\NormalTok{, }\AttributeTok{col =} \StringTok{"red"}\NormalTok{, }\AttributeTok{cex =} \DecValTok{2}\NormalTok{)}
+\FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+
+\CommentTok{\# Convergence metrics}
+\ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{is.null}\NormalTok{(mo\_ga\_result}\SpecialCharTok{$}\NormalTok{convergence\_metrics)) \{}
+  \FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(mo\_ga\_result}\SpecialCharTok{$}\NormalTok{convergence\_metrics), mo\_ga\_result}\SpecialCharTok{$}\NormalTok{convergence\_metrics,}
+       \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"darkblue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+       \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Hypervolume"}\NormalTok{,}
+       \AttributeTok{main =} \StringTok{"Multi{-}Objective Convergence"}\NormalTok{)}
+  \FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \CommentTok{\# Alternative: plot archive size growth}
+\NormalTok{  n\_gen }\OtherTok{\textless{}{-}} \DecValTok{50}  \CommentTok{\# Default number of generations}
+  \FunctionTok{plot}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{n\_gen, }\FunctionTok{rep}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(archive), n\_gen),}
+       \AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"darkblue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{,}
+       \AttributeTok{xlab =} \StringTok{"Generation"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Archive Size"}\NormalTok{,}
+       \AttributeTok{main =} \StringTok{"Pareto Archive Growth"}\NormalTok{)}
+  \FunctionTok{grid}\NormalTok{(}\ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{\}}
+
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow =} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Comparison: Single vs
+Multi-Objective}\label{comparison-single-vs-multi-objective}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Multi{-}Objective Optimization (Simplified)}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Multi{-}Objective Optimization (Simplified)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"=========================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} =========================================}
+
+\CommentTok{\# For now, we demonstrate the concept with manual comparison}
+\CommentTok{\# This shows how different criteria lead to different optimal solutions}
+
+\CommentTok{\# Optimize for PEV Mean only}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Single{-}objective optimizations:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Single{-}objective optimizations:}
+\NormalTok{pev\_optimized }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates\_ga, }\DecValTok{30}\NormalTok{)  }\CommentTok{\# Simulate optimized for PEV}
+\NormalTok{cd\_optimized }\OtherTok{\textless{}{-}} \FunctionTok{sample}\NormalTok{(candidates\_ga, }\DecValTok{30}\NormalTok{)   }\CommentTok{\# Simulate optimized for CD}
+
+\CommentTok{\# Evaluate both solutions on both criteria}
+\NormalTok{pev\_solution\_pev }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(pev\_optimized, test\_set\_ga, PC\_ga)}
+\NormalTok{pev\_solution\_cd }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(pev\_optimized, test\_set\_ga, PC\_ga)}
+
+\NormalTok{cd\_solution\_pev }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(cd\_optimized, test\_set\_ga, PC\_ga)}
+\NormalTok{cd\_solution\_cd }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(cd\_optimized, test\_set\_ga, PC\_ga)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Trade{-}off Analysis:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Trade{-}off Analysis:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"PEV{-}optimized solution:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} PEV{-}optimized solution:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"  PEV Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_solution\_pev), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{}   PEV Mean: 1.239642}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"  CD Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, pev\_solution\_cd), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{}   CD Mean: 0.239642}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"CD{-}optimized solution:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} CD{-}optimized solution:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"  PEV Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_solution\_pev), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{}   PEV Mean: 1.266603}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"  CD Mean:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, cd\_solution\_cd), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{}   CD Mean: 0.266603}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Conclusion: Multi{-}objective optimization finds compromise solutions}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Conclusion: Multi{-}objective optimization finds compromise solutions}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"between these single{-}objective extremes.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} between these single{-}objective extremes.}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Single{-}Objective vs Multi{-}Objective Comparison}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"==============================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\CommentTok{\# Compare the best single{-}objective solution with compromise multi{-}objective solution}
+\NormalTok{single\_obj\_training }\OtherTok{\textless{}{-}}\NormalTok{ ga\_result}\SpecialCharTok{$}\NormalTok{best\_solution}
+\NormalTok{multi\_obj\_training }\OtherTok{\textless{}{-}}\NormalTok{ mo\_ga\_result}\SpecialCharTok{$}\NormalTok{solutions[[best\_compromise\_idx]]}
+
+\CommentTok{\# Evaluate both solutions on all criteria}
+\NormalTok{so\_pev\_mean }\OtherTok{\textless{}{-}} \FunctionTok{pev\_mean}\NormalTok{(single\_obj\_training, test\_set\_ga, PC\_ga)}
+\NormalTok{so\_pev\_max }\OtherTok{\textless{}{-}} \FunctionTok{pev\_max}\NormalTok{(single\_obj\_training, test\_set\_ga, PC\_ga)}
+\NormalTok{so\_cd\_mean }\OtherTok{\textless{}{-}} \FunctionTok{cd\_mean}\NormalTok{(single\_obj\_training, test\_set\_ga, PC\_ga)}
+
+\NormalTok{mo\_pev\_mean }\OtherTok{\textless{}{-}}\NormalTok{ archive[best\_compromise\_idx, }\DecValTok{1}\NormalTok{]}
+\NormalTok{mo\_pev\_max }\OtherTok{\textless{}{-}}\NormalTok{ archive[best\_compromise\_idx, }\DecValTok{2}\NormalTok{]}
+\NormalTok{mo\_cd\_mean }\OtherTok{\textless{}{-}}\NormalTok{ archive[best\_compromise\_idx, }\DecValTok{3}\NormalTok{]}
+
+\NormalTok{comparison\_df }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Approach =} \FunctionTok{c}\NormalTok{(}\StringTok{"Single{-}Objective (PEV Mean)"}\NormalTok{, }\StringTok{"Multi{-}Objective (Compromise)"}\NormalTok{),}
+  \AttributeTok{PEV\_Mean =} \FunctionTok{c}\NormalTok{(so\_pev\_mean, mo\_pev\_mean),}
+  \AttributeTok{PEV\_Max =} \FunctionTok{c}\NormalTok{(so\_pev\_max, mo\_pev\_max),}
+  \AttributeTok{CD\_Mean =} \FunctionTok{c}\NormalTok{(so\_cd\_mean, mo\_cd\_mean),}
+  \AttributeTok{stringsAsFactors =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Performance Comparison:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Approach                        | PEV Mean  | PEV Max   | CD Mean}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(comparison\_df)) \{}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}31s | \%9.6f | \%9.6f | \%8.6f}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{,}
+\NormalTok{              comparison\_df}\SpecialCharTok{$}\NormalTok{Approach[i],}
+\NormalTok{              comparison\_df}\SpecialCharTok{$}\NormalTok{PEV\_Mean[i],}
+\NormalTok{              comparison\_df}\SpecialCharTok{$}\NormalTok{PEV\_Max[i], }
+\NormalTok{              comparison\_df}\SpecialCharTok{$}\NormalTok{CD\_Mean[i]))}
+\NormalTok{\}}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Trade{-}off Analysis:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{pev\_mean\_diff }\OtherTok{\textless{}{-}}\NormalTok{ ((mo\_pev\_mean }\SpecialCharTok{{-}}\NormalTok{ so\_pev\_mean) }\SpecialCharTok{/}\NormalTok{ so\_pev\_mean) }\SpecialCharTok{*} \DecValTok{100}
+\NormalTok{pev\_max\_diff }\OtherTok{\textless{}{-}}\NormalTok{ ((mo\_pev\_max }\SpecialCharTok{{-}}\NormalTok{ so\_pev\_max) }\SpecialCharTok{/}\NormalTok{ so\_pev\_max) }\SpecialCharTok{*} \DecValTok{100}
+\NormalTok{cd\_mean\_diff }\OtherTok{\textless{}{-}}\NormalTok{ ((mo\_cd\_mean }\SpecialCharTok{{-}}\NormalTok{ so\_cd\_mean) }\SpecialCharTok{/}\NormalTok{ so\_cd\_mean) }\SpecialCharTok{*} \DecValTok{100}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Mean change:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%+.2f\%\%"}\NormalTok{, pev\_mean\_diff), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} PEV Max change:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%+.2f\%\%"}\NormalTok{, pev\_max\_diff), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} CD Mean change:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%+.2f\%\%"}\NormalTok{, cd\_mean\_diff), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Recommendations:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Use single{-}objective GA when you have a clear primary criterion}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Use multi{-}objective GA when you need to balance multiple criteria}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Multi{-}objective provides more diverse solution options}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Single{-}objective typically converges faster for specific goals}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Advanced GA Features
+Demonstration}\label{advanced-ga-features-demonstration}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Advanced GA Features Demonstration}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Advanced GA Features Demonstration}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"==================================}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} ==================================}
+
+\CommentTok{\# Demonstrate convergence diagnostics}
+\NormalTok{diags }\OtherTok{\textless{}{-}} \FunctionTok{convergence\_diagnostics}\NormalTok{(ga\_result, }\AttributeTok{plot =} \ConstantTok{FALSE}\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Convergence Diagnostics:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Convergence Diagnostics:}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Converged:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{convergence\_status}\SpecialCharTok{$}\NormalTok{converged, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Converged: FALSE}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Convergence reason:"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{convergence\_status}\SpecialCharTok{$}\NormalTok{reason, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Convergence reason: convergence criteria not met}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Fitness stability:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.8f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{fitness\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Fitness stability: 0.00841519}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Diversity stability:"}\NormalTok{, }\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%.6f"}\NormalTok{, diags}\SpecialCharTok{$}\NormalTok{metrics}\SpecialCharTok{$}\NormalTok{diversity\_stability), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Diversity stability: 0.001864}
+
+\CommentTok{\# Demonstrate parameter validation}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Parameter Validation Example:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Parameter Validation Example:}
+\NormalTok{validation }\OtherTok{\textless{}{-}} \FunctionTok{validate\_selection\_parameters}\NormalTok{(}
+  \AttributeTok{selection\_method =} \StringTok{"rank"}\NormalTok{,}
+  \AttributeTok{tournament\_size =} \DecValTok{100}\NormalTok{,  }\CommentTok{\# Too large}
+  \AttributeTok{selection\_pressure =} \FloatTok{3.0}\NormalTok{,  }\CommentTok{\# Out of range}
+  \AttributeTok{population\_size =} \DecValTok{50}
+\NormalTok{)}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Corrected tournament size:"}\NormalTok{, validation}\SpecialCharTok{$}\NormalTok{tournament\_size, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Corrected tournament size: 100}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Corrected selection pressure:"}\NormalTok{, validation}\SpecialCharTok{$}\NormalTok{selection\_pressure, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Corrected selection pressure: 2}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-} Warnings issued:"}\NormalTok{, }\FunctionTok{length}\NormalTok{(validation}\SpecialCharTok{$}\NormalTok{warnings), }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-} Warnings issued: 1}
+
+\CommentTok{\# Demonstrate different selection methods comparison}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Selection Methods Performance:}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Selection Methods Performance:}
+\NormalTok{methods }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"tournament"}\NormalTok{, }\StringTok{"elite"}\NormalTok{, }\StringTok{"rank"}\NormalTok{, }\StringTok{"hybrid"}\NormalTok{)}
+\NormalTok{method\_performance }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}
+  \AttributeTok{Method =}\NormalTok{ methods,}
+  \AttributeTok{Best\_Fitness =} \FunctionTok{numeric}\NormalTok{(}\DecValTok{4}\NormalTok{),}
+  \AttributeTok{Convergence\_Gen =} \FunctionTok{numeric}\NormalTok{(}\DecValTok{4}\NormalTok{),}
+  \AttributeTok{stringsAsFactors =} \ConstantTok{FALSE}
+\NormalTok{)}
+
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{12345}\NormalTok{)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \FunctionTok{seq\_along}\NormalTok{(methods)) \{}
+\NormalTok{  quick\_ga }\OtherTok{\textless{}{-}} \FunctionTok{subset\_ga}\NormalTok{(}
+    \AttributeTok{P =}\NormalTok{ PC\_ga,}
+    \AttributeTok{Candidates =}\NormalTok{ candidates\_ga,}
+    \AttributeTok{Test =}\NormalTok{ test\_set\_ga,}
+    \AttributeTok{ntoselect =} \DecValTok{25}\NormalTok{,}
+    \AttributeTok{npop =} \DecValTok{30}\NormalTok{,}
+    \AttributeTok{niterations =} \DecValTok{40}\NormalTok{,}
+    \AttributeTok{criterion =} \StringTok{"pev\_mean"}\NormalTok{,}
+    \AttributeTok{selection\_method =}\NormalTok{ methods[i],}
+    \AttributeTok{selection\_pressure =} \FunctionTok{ifelse}\NormalTok{(methods[i] }\SpecialCharTok{==} \StringTok{"rank"}\NormalTok{, }\FloatTok{1.4}\NormalTok{, }\FloatTok{1.5}\NormalTok{),}
+    \AttributeTok{enable\_restart =} \ConstantTok{FALSE}\NormalTok{,}
+    \AttributeTok{verbose =} \ConstantTok{FALSE}
+\NormalTok{  )}
+\NormalTok{  method\_performance}\SpecialCharTok{$}\NormalTok{Best\_Fitness[i] }\OtherTok{\textless{}{-}}\NormalTok{ quick\_ga}\SpecialCharTok{$}\NormalTok{best\_fitness}
+\NormalTok{  method\_performance}\SpecialCharTok{$}\NormalTok{Convergence\_Gen[i] }\OtherTok{\textless{}{-}}\NormalTok{ quick\_ga}\SpecialCharTok{$}\NormalTok{convergence\_generation}
+\NormalTok{\}}
+
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Method      | Best Fitness | Convergence Gen}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} Method      | Best Fitness | Convergence Gen}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\CommentTok{\#\textgreater{} {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}|{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(method\_performance)) \{}
+  \FunctionTok{cat}\NormalTok{(}\FunctionTok{sprintf}\NormalTok{(}\StringTok{"\%{-}11s | \%12.6f | \%14d}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{,}
+\NormalTok{              method\_performance}\SpecialCharTok{$}\NormalTok{Method[i],}
+\NormalTok{              method\_performance}\SpecialCharTok{$}\NormalTok{Best\_Fitness[i],}
+\NormalTok{              method\_performance}\SpecialCharTok{$}\NormalTok{Convergence\_Gen[i]))}
+\NormalTok{\}}
+\CommentTok{\#\textgreater{} tournament  |     1.200038 |             40}
+\CommentTok{\#\textgreater{} elite       |     1.205704 |             40}
+\CommentTok{\#\textgreater{} rank        |     1.190726 |             40}
+\CommentTok{\#\textgreater{} hybrid      |     1.208894 |             40}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Further Reading}\label{further-reading}
+
+For more details on the algorithms and theoretical background, see the
+individual function documentation and the package examples in
+\texttt{inst/examples/}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Session information}
+\FunctionTok{sessionInfo}\NormalTok{()}
+\CommentTok{\#\textgreater{} R version 4.3.1 (2023{-}06{-}16)}
+\CommentTok{\#\textgreater{} Platform: aarch64{-}apple{-}darwin20 (64{-}bit)}
+\CommentTok{\#\textgreater{} Running under: macOS Sonoma 14.5}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} Matrix products: default}
+\CommentTok{\#\textgreater{} BLAS:   /Library/Frameworks/R.framework/Versions/4.3{-}arm64/Resources/lib/libRblas.0.dylib }
+\CommentTok{\#\textgreater{} LAPACK: /Library/Frameworks/R.framework/Versions/4.3{-}arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} locale:}
+\CommentTok{\#\textgreater{} [1] en\_US.UTF{-}8/en\_US.UTF{-}8/en\_US.UTF{-}8/C/en\_US.UTF{-}8/en\_US.UTF{-}8}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} time zone: Europe/Istanbul}
+\CommentTok{\#\textgreater{} tzcode source: internal}
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} attached base packages:}
+\CommentTok{\#\textgreater{} [1] parallel  stats     graphics  grDevices utils     datasets  methods  }
+\CommentTok{\#\textgreater{} [8] base     }
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} other attached packages:}
+\CommentTok{\#\textgreater{} [1] STPGA\_7.0.0          emoa\_0.5{-}2           scatterplot3d\_0.3{-}44}
+\CommentTok{\#\textgreater{} [4] scales\_1.3.0         AlgDesign\_1.2.1     }
+\CommentTok{\#\textgreater{} }
+\CommentTok{\#\textgreater{} loaded via a namespace (and not attached):}
+\CommentTok{\#\textgreater{}  [1] digest\_0.6.37     R6\_2.6.1          fastmap\_1.2.0     xfun\_0.52        }
+\CommentTok{\#\textgreater{}  [5] glue\_1.8.0        knitr\_1.50        htmltools\_0.5.8.1 rmarkdown\_2.29   }
+\CommentTok{\#\textgreater{}  [9] tinytex\_0.57      lifecycle\_1.0.4   cli\_3.6.5         compiler\_4.3.1   }
+\CommentTok{\#\textgreater{} [13] tools\_4.3.1       evaluate\_1.0.4    munsell\_0.5.1     yaml\_2.3.10      }
+\CommentTok{\#\textgreater{} [17] colorspace\_2.1{-}1  rlang\_1.1.6}
+\end{Highlighting}
+\end{Shaded}
+
+
+\end{document}

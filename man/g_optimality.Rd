@@ -25,6 +25,42 @@ G-optimality criterion (minimizes maximum prediction variance)
 G-optimality minimizes the maximum entry in the diagonal of the hat matrix,
 providing the best worst-case prediction precision.
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(753)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:20]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute G-optimality (minimizes maximum prediction variance)
+gopt_value <- g_optimality(train_set, test_set, PC_subset)
+print(paste("G-optimality value:", round(gopt_value, 6)))
+
+# Compare with other optimality criteria
+aopt <- a_optimality(train_set, test_set, PC_subset)
+dopt <- d_optimality(train_set, test_set, PC_subset)
+eopt <- e_optimality(train_set, test_set, PC_subset)
+
+print("Optimality Comparison:")
+print(paste("A-optimality (average variance):", round(aopt, 6)))
+print(paste("D-optimality (volume):", round(dopt, 6)))
+print(paste("E-optimality (max eigenvalue):", round(eopt, 6)))
+print(paste("G-optimality (max hat diagonal):", round(gopt_value, 6)))
+
+}
 \references{
 Kiefer, J. (1975). Construction and optimality of generalized Youden designs.
 }

@@ -32,9 +32,45 @@ genetic relationships through a kinship matrix. Uses correct BLUP theory.
 }
 \details{
 Implements the correct BLUP prediction error variance formula from Henderson (1984):
-PEV = σ²ᵤ[G₂₂ - G₂₁V₁₁⁻¹G₁₂ - G₂₁V₁₁⁻¹X₁(X₁'V₁₁⁻¹X₁)⁻¹X₁'V₁₁⁻¹G₁₂]
+PEV = sigma_u^2[G_22 - G_21 V_11^(-1) G_12 - G_21 V_11^(-1) X_1 (X_1' V_11^(-1) X_1)^(-1) X_1' V_11^(-1) G_12]
 
-where V₁₁ = σ²ᵤG₁₁ + σ²ₑI and both correction terms are SUBTRACTED.
+where V_11 = sigma_u^2 G_11 + sigma_e^2 I and both correction terms are SUBTRACTED.
+}
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for mixed model demonstration
+set.seed(987)
+subset_indices <- sample(1:nrow(Wheat.M), 60)
+M_subset <- Wheat.M[subset_indices, 1:50]
+K_subset <- Wheat.K[subset_indices, subset_indices]
+
+# Define train and test sets
+all_individuals <- rownames(M_subset)
+test_set <- sample(all_individuals, 12)
+train_set <- sample(setdiff(all_individuals, test_set), 18)
+
+# Mixed model PEV with different heritability scenarios
+h2_values <- c(0.2, 0.5, 0.8)
+
+print("PEV Mean MM - Different Heritabilities:")
+for (h2 in h2_values) {
+  var_comps <- h2_to_variances(h2)
+  pev_mm <- pev_mean_mm(train_set, test_set, M_subset, K_subset, 
+                        Vg = var_comps$Vg, Ve = var_comps$Ve)
+  print(paste("h² =", h2, "-> PEV =", round(pev_mm, 6)))
+}
+
+# Compare with non-mixed model PEV using PCA
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+pev_regular <- pev_mean(train_set, test_set, PC_subset)
+
+print(paste("Regular PEV (PCA):", round(pev_regular, 6)))
+print("Mixed model accounts for genetic relationships via kinship matrix")
+
 }
 \references{
 Henderson, C.R. (1984). Applications of Linear Models in Animal Breeding.

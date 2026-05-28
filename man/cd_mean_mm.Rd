@@ -32,10 +32,51 @@ the expected prediction accuracy of random effects (breeding values).
 }
 \details{
 The Coefficient of Determination for BLUP of random effects is defined as:
-R² = 1 - PEV/σ²ᵤ
+R^2 = 1 - PEV/sigma_u^2
 
 This represents the proportion of genetic variance that can be predicted,
 or the reliability of breeding value prediction.
+}
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for mixed model demonstration
+set.seed(159)
+subset_indices <- sample(1:nrow(Wheat.M), 60)
+M_subset <- Wheat.M[subset_indices, 1:50]
+K_subset <- Wheat.K[subset_indices, subset_indices]
+
+# Define train and test sets
+all_individuals <- rownames(M_subset)
+test_set <- sample(all_individuals, 12)
+train_set <- sample(setdiff(all_individuals, test_set), 18)
+
+# Mixed model R² (reliability) with different heritability scenarios
+h2_values <- c(0.2, 0.5, 0.8)
+
+print("R² (Coefficient of Determination) - Different Heritabilities:")
+for (h2 in h2_values) {
+  var_comps <- h2_to_variances(h2)
+  cd_mm <- cd_mean_mm(train_set, test_set, M_subset, K_subset, 
+                      Vg = var_comps$Vg, Ve = var_comps$Ve)
+  print(paste("h² =", h2, "-> R² =", round(cd_mm, 4)))
+}
+
+# Compare training set sizes
+small_train <- sample(setdiff(all_individuals, test_set), 10)
+large_train <- sample(setdiff(all_individuals, test_set), 25)
+
+var_comps <- h2_to_variances(0.5)  # Medium heritability
+cd_small <- cd_mean_mm(small_train, test_set, M_subset, K_subset, 
+                       Vg = var_comps$Vg, Ve = var_comps$Ve)
+cd_large <- cd_mean_mm(large_train, test_set, M_subset, K_subset, 
+                       Vg = var_comps$Vg, Ve = var_comps$Ve)
+
+print(paste("Small training set (n=10): R² =", round(cd_small, 4)))
+print(paste("Large training set (n=25): R² =", round(cd_large, 4)))
+print(paste("Improvement with larger set:", round(cd_large - cd_small, 4)))
+
 }
 \references{
 Henderson, C.R. (1984). Applications of Linear Models in Animal Breeding.

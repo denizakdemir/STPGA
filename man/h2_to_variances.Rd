@@ -17,6 +17,21 @@ List with Vg (genetic variance) and Ve (error variance)
 \description{
 Literature-corrected optimization criteria for subset selection in experimental design
 }
+\examples{
+# Convert heritability to variance components
+h2_values <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+
+for (h2 in h2_values) {
+  var_comps <- h2_to_variances(h2)
+  print(paste("h² =", h2, "-> Vg =", var_comps$Vg, ", Ve =", var_comps$Ve))
+}
+
+# Example with custom total variance
+var_comps_scaled <- h2_to_variances(0.6, total_var = 2.5)
+print(paste("h² = 0.6, total_var = 2.5 -> Vg =", var_comps_scaled$Vg, 
+            ", Ve =", var_comps_scaled$Ve))
+
+}
 \references{
 Fedorov, V.V. (1972). Theory of Optimal Experiments. Academic Press.
 Henderson, C.R. (1984). Applications of Linear Models in Animal Breeding.

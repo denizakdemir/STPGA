@@ -7,7 +7,7 @@
 subset_ga(
   P,
   Candidates,
-  Test,
+  Test = NULL,
   ntoselect,
   npop = 100,
   nelite = 5,
@@ -19,6 +19,10 @@ subset_ga(
   niterations = 500,
   minitbefstop = 200,
   niterreg = 5,
+  convergence_window_multiplier = 4,
+  enable_restart = TRUE,
+  restart_threshold = 0.5,
+  max_restarts = 2,
   lambda = 1e-06,
   plotiters = FALSE,
   plottype = 1,
@@ -33,6 +37,7 @@ subset_ga(
   adaptive_mutation = TRUE,
   selection_method = "tournament",
   tournament_size = 3,
+  selection_pressure = 1.5,
   diversity_preservation = TRUE,
   diversity_method = "crowding",
   crowding_factor = 3,
@@ -71,6 +76,14 @@ subset_ga(
 
 \item{niterreg}{Iterations for convergence check (default: 5)}
 
+\item{convergence_window_multiplier}{Multiplier for convergence window size (default: 4)}
+
+\item{enable_restart}{Whether to enable restart mechanism for premature convergence (default: TRUE)}
+
+\item{restart_threshold}{Threshold for triggering restart (default: 0.5)}
+
+\item{max_restarts}{Maximum number of restarts allowed (default: 2)}
+
 \item{lambda}{Ridge regression parameter (default: 1e-6)}
 
 \item{plotiters}{Whether to plot during iterations (default: FALSE)}
@@ -95,9 +108,11 @@ subset_ga(
 
 \item{adaptive_mutation}{Whether to use adaptive mutation rates (default: TRUE)}
 
-\item{selection_method}{Selection method: "tournament", "elite", "hybrid" (default: "tournament")}
+\item{selection_method}{Selection method: "tournament", "elite", "rank", "hybrid" (default: "tournament")}
 
 \item{tournament_size}{Tournament size for tournament selection (default: 3)}
+
+\item{selection_pressure}{Selection pressure for rank-based selection (default: 1.5)}
 
 \item{diversity_preservation}{Whether to preserve diversity (default: TRUE)}
 
@@ -118,6 +133,66 @@ List containing best solution, fitness history, and statistics
 }
 \description{
 Clean, well-organized genetic algorithm functions for subset selection
+}
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a manageable subset for demonstration
+set.seed(123)
+subset_indices <- sample(1:nrow(Wheat.M), 100)
+M_subset <- Wheat.M[subset_indices, 1:30]
+
+# Extract principal components for genetic algorithm
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define candidate and test sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 20)
+candidates <- setdiff(all_individuals, test_set)
+
+# Basic genetic algorithm run
+ga_result <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = 15,
+  npop = 20,
+  niterations = 30,
+  criterion = "pev_mean",
+  verbose = FALSE
+)
+
+print(paste("Best fitness:", round(ga_result$best_fitness, 6)))
+print(paste("Convergence generation:", ga_result$convergence_generation))
+print(paste("Selected individuals:", length(ga_result$best_solution)))
+
+# Enhanced genetic algorithm with rank-based selection and restart
+ga_enhanced <- subset_ga(
+  P = PC_subset,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = 15,
+  npop = 20,
+  niterations = 30,
+  criterion = "pev_mean",
+  selection_method = "rank",
+  selection_pressure = 1.4,
+  enable_restart = TRUE,
+  restart_threshold = 0.6,
+  max_restarts = 1,
+  verbose = FALSE
+)
+
+print(paste("Enhanced GA fitness:", round(ga_enhanced$best_fitness, 6)))
+print(paste("Restart count:", ga_enhanced$restart_count))
+
+# Generate convergence diagnostics
+diags <- convergence_diagnostics(ga_enhanced, plot = FALSE)
+print(paste("Converged:", diags$convergence_status$converged))
+print(paste("Convergence reason:", diags$convergence_status$reason))
 }
 \author{
 Deniz Akdemir

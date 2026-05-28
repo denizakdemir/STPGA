@@ -24,6 +24,47 @@ I-optimality criterion (minimizes average prediction variance)
 \details{
 I-optimality minimizes the average prediction variance over the design space.
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(951)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:20]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute I-optimality (average prediction variance over design space)
+iopt_value <- i_optimality(train_set, test_set, PC_subset)
+print(paste("I-optimality value:", round(iopt_value, 6)))
+
+# Compare I-optimality with A-optimality (both are average-based)
+aopt_value <- a_optimality(train_set, test_set, PC_subset)
+print(paste("A-optimality (parameter space):", round(aopt_value, 6)))
+print(paste("I-optimality (design space):", round(iopt_value, 6)))
+
+# Test different training set sizes
+small_train <- sample(candidates, 12)
+large_train <- sample(candidates, 28)
+
+iopt_small <- i_optimality(small_train, test_set, PC_subset)
+iopt_large <- i_optimality(large_train, test_set, PC_subset)
+
+print(paste("Small training (n=12):", round(iopt_small, 6)))
+print(paste("Large training (n=28):", round(iopt_large, 6)))
+print(paste("Improvement factor:", round(iopt_small / iopt_large, 2)))
+
+}
 \references{
 Fedorov, V.V. (1972). Theory of Optimal Experiments.
 }

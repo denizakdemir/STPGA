@@ -76,8 +76,8 @@ test_that("distance matrix functions work correctly", {
   expect_true(mean_dist <= max_dist)  # Mean should be <= max
   
   # Test internal distances
-  neg_min_internal <- distance_internal_min(train)
-  neg_mean_internal <- distance_internal_mean(train)
+  neg_min_internal <- distance_internal_min(train, distance_matrix = dist_matrix)
+  neg_mean_internal <- distance_internal_mean(train, distance_matrix = dist_matrix)
   
   expect_type(neg_min_internal, "double")
   expect_type(neg_mean_internal, "double")

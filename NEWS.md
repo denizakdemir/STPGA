@@ -1,5 +1,14 @@
 # STPGA News
 
+## STPGA 7.0.2 (2026-05-28)
+
+### Bug fixes
+
+* Exported and documented the GA selection helper functions required by the
+  installed package namespace, including `validate_selection_parameters()`.
+* Added regression coverage for the user-reported `cd_mean`, `max_to_test`, and
+  `mean_to_test` workflows.
+
 ## STPGA 7.0.1 (2026-05-26)
 
 ### Bug fixes

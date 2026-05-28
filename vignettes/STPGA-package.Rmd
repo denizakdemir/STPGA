@@ -287,89 +287,169 @@ cat("Values match:", aopt_modern == aopt_legacy, "\n")
 
 # Genetic Algorithm Optimization
 
-STPGA's core functionality is optimizing training set selection using genetic algorithms.
+STPGA's core functionality is optimizing training set selection using genetic algorithms with advanced convergence detection and selection mechanisms.
 
-## Single-Objective Optimization
+## Enhanced Genetic Algorithm Features (v7.0.0)
+
+The latest version includes significant improvements to the genetic algorithm implementation:
+
+- **Multi-criteria convergence detection**: Monitors fitness stabilization, improvement rate, population diversity, and fitness variance
+- **Restart mechanisms**: Automatically restarts with diversified populations when premature convergence is detected
+- **Advanced selection methods**: Tournament, elite, rank-based, and hybrid selection with validation
+- **Configurable convergence windows**: Flexible convergence tracking with diagnostic tools
+
+## Single-Objective Optimization with Advanced Features
 
 ```{r single-objective-ga}
 # Define optimization parameters
 n_select <- 40  # Number of individuals to select
 n_candidates <- length(candidates)
 
-cat("Genetic Algorithm Optimization\n")
-cat("==============================\n")
+cat("Enhanced Genetic Algorithm Optimization\n")
+cat("======================================\n")
 cat("Candidate pool size:", n_candidates, "\n")
 cat("Selection target:", n_select, "\n")
 cat("Test set size:", length(test_set), "\n")
 
-# For demonstration, we'll optimize manually by testing several training sets
+# Demonstrate the genetic algorithm with advanced features
 set.seed(456)
-n_trials <- 10
-best_fitness <- Inf
-best_solution <- NULL
 
-cat("Manual optimization (", n_trials, " random trials):\n")
-for (i in 1:n_trials) {
-  trial_solution <- sample(candidates, n_select)
-  trial_fitness <- pev_mean(trial_solution, test_set, Wheat.PC5, normalized = TRUE)
-  
-  if (trial_fitness < best_fitness) {
-    best_fitness <- trial_fitness
-    best_solution <- trial_solution
-  }
-  
-  if (i <= 3) {  # Show first few trials
-    cat(sprintf("Trial %d: PEV = %.8f\n", i, trial_fitness))
-  }
-}
+# Basic genetic algorithm run
+cat("\nRunning genetic algorithm with default settings...\n")
+ga_basic <- subset_ga(
+  P = Wheat.PC5,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 30,
+  niterations = 50,
+  criterion = "pev_mean",
+  verbose = FALSE
+)
 
-cat("\nOptimization Results:\n")
-cat("Best solution size:", length(best_solution), "\n")
-cat("Best fitness:", sprintf("%.8f", best_fitness), "\n")
+cat("Basic GA Results:\n")
+cat("Best fitness:", sprintf("%.8f", ga_basic$best_fitness), "\n")
+cat("Convergence generation:", ga_basic$convergence_generation, "\n")
+cat("Selection method:", ga_basic$parameters$selection_method, "\n")
+
+# Enhanced genetic algorithm with rank-based selection and restart
+cat("\nRunning enhanced GA with rank-based selection and restart...\n")
+ga_enhanced <- subset_ga(
+  P = Wheat.PC5,
+  Candidates = candidates,
+  Test = test_set,
+  ntoselect = n_select,
+  npop = 30,
+  niterations = 50,
+  criterion = "pev_mean",
+  selection_method = "rank",
+  selection_pressure = 1.4,
+  enable_restart = TRUE,
+  restart_threshold = 0.6,
+  max_restarts = 1,
+  convergence_window_multiplier = 3,
+  verbose = FALSE
+)
+
+cat("Enhanced GA Results:\n")
+cat("Best fitness:", sprintf("%.8f", ga_enhanced$best_fitness), "\n")
+cat("Convergence generation:", ga_enhanced$convergence_generation, "\n")
+cat("Total generations:", ga_enhanced$total_generations, "\n")
+cat("Restart count:", ga_enhanced$restart_count, "\n")
+cat("Selection method:", ga_enhanced$parameters$selection_method, "\n")
+cat("Selection pressure:", ga_enhanced$parameters$selection_pressure, "\n")
 
 # Compare with random selection
 random_selection <- sample(candidates, n_select)
 random_fitness <- pev_mean(random_selection, test_set, Wheat.PC5, normalized = TRUE)
-improvement <- (random_fitness - best_fitness) / random_fitness * 100
 
-cat("\nComparison with random selection:\n")
+cat("\nComparison Results:\n")
 cat("Random selection PEV:", sprintf("%.8f", random_fitness), "\n")
-cat("Optimized PEV:       ", sprintf("%.8f", best_fitness), "\n")
-cat("Improvement:         ", sprintf("%.2f%%", improvement), "\n")
+cat("Basic GA PEV:       ", sprintf("%.8f", ga_basic$best_fitness), "\n")
+cat("Enhanced GA PEV:    ", sprintf("%.8f", ga_enhanced$best_fitness), "\n")
+
+basic_improvement <- (random_fitness - ga_basic$best_fitness) / random_fitness * 100
+enhanced_improvement <- (random_fitness - ga_enhanced$best_fitness) / random_fitness * 100
+
+cat("Basic GA improvement:", sprintf("%.2f%%", basic_improvement), "\n")
+cat("Enhanced GA improvement:", sprintf("%.2f%%", enhanced_improvement), "\n")
 ```
 
-```{r plot-optimization, fig.width=8, fig.height=5}
-# Plot optimization trials
-if (n_trials > 0) {
-  # Simulate a series of trials for plotting
-  trial_results <- numeric(n_trials)
-  set.seed(456)
-  for (i in 1:n_trials) {
-    trial_solution <- sample(candidates, n_select)
-    trial_results[i] <- pev_mean(trial_solution, test_set, Wheat.PC5, normalized = TRUE)
+## Convergence Diagnostics
+
+The enhanced genetic algorithm provides comprehensive convergence diagnostics to help users understand optimization behavior.
+
+```{r convergence-diagnostics}
+# Generate convergence diagnostics for the enhanced GA
+cat("Convergence Diagnostics for Enhanced GA:\n")
+cat("=======================================\n")
+
+diags <- convergence_diagnostics(ga_enhanced, plot = FALSE)
+
+cat("Convergence Status:\n")
+cat("- Converged:", diags$convergence_status$converged, "\n")
+cat("- Reason:", diags$convergence_status$reason, "\n")
+cat("- Window size:", diags$window_size, "\n")
+cat("- Data points:", diags$data_points, "\n")
+
+cat("\nConvergence Metrics:\n")
+cat("- Fitness stability:", sprintf("%.6f", diags$metrics$fitness_stability), "\n")
+cat("- Diversity stability:", sprintf("%.6f", diags$metrics$diversity_stability), "\n")
+cat("- Mean improvement rate:", sprintf("%.6f", diags$metrics$mean_improvement_rate), "\n")
+cat("- Variance stability:", sprintf("%.6f", diags$metrics$variance_stability), "\n")
+
+if (length(diags$recommendations) > 0) {
+  cat("\nRecommendations:\n")
+  for (i in seq_along(diags$recommendations)) {
+    cat(paste("-", diags$recommendations[i], "\n"))
   }
-  
-  # Plot the trials
-  plot(1:n_trials, trial_results, type = "b", pch = 19, col = "blue", lwd = 2,
-       xlab = "Trial Number", ylab = "PEV (normalized)", 
-       main = "Training Set Optimization Trials")
-  grid(TRUE)
-  
-  # Highlight best solution
-  best_idx <- which.min(trial_results)
-  points(best_idx, trial_results[best_idx], col = "red", pch = 19, cex = 1.5)
-  
-  # Add random baseline
-  abline(h = random_fitness, col = "gray", lty = 2, lwd = 2)
-  text(n_trials * 0.7, random_fitness, "Random Selection", 
-       col = "gray", pos = 3)
-  
-  legend("topright", 
-         legend = c("Trials", "Best", "Random"),
-         pch = c(19, 19, NA),
-         lty = c(1, NA, 2),
-         col = c("blue", "red", "gray"))
+} else {
+  cat("\nNo specific recommendations - optimization appears satisfactory.\n")
 }
+
+# Show restart history if any restarts occurred
+if (ga_enhanced$restart_count > 0) {
+  cat("\nRestart History:\n")
+  for (i in 1:ga_enhanced$restart_count) {
+    restart_info <- ga_enhanced$restart_history[[i]]
+    cat(sprintf("Restart %d: Generation %d, Fitness %.6f, Reason: %s\n",
+                i, restart_info$generation, restart_info$best_fitness,
+                restart_info$convergence_reason))
+  }
+}
+```
+
+```{r plot-ga-convergence, fig.width=10, fig.height=6}
+# Plot GA convergence comparison
+par(mfrow = c(1, 2))
+
+# Plot fitness history for both algorithms
+plot(1:nrow(ga_basic$fitness_history), ga_basic$fitness_history[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness",
+     main = "GA Convergence Comparison")
+lines(1:nrow(ga_enhanced$fitness_history), ga_enhanced$fitness_history[, "best"],
+      col = "red", lwd = 2)
+grid(TRUE)
+legend("topright", legend = c("Basic GA", "Enhanced GA"), 
+       col = c("blue", "red"), lwd = 2)
+
+# Plot population diversity if available
+if ("diversity" %in% names(ga_enhanced$population_stats[[1]])) {
+  basic_diversity <- sapply(ga_basic$population_stats, function(x) x$diversity)
+  enhanced_diversity <- sapply(ga_enhanced$population_stats, function(x) x$diversity)
+  
+  plot(1:length(basic_diversity), basic_diversity,
+       type = "l", col = "blue", lwd = 2,
+       xlab = "Generation", ylab = "Population Diversity",
+       main = "Population Diversity Over Time")
+  lines(1:length(enhanced_diversity), enhanced_diversity, col = "red", lwd = 2)
+  grid(TRUE)
+  legend("topright", legend = c("Basic GA", "Enhanced GA"), 
+         col = c("blue", "red"), lwd = 2)
+}
+
+par(mfrow = c(1, 1))
 ```
 
 ## Multi-Objective Optimization
@@ -583,12 +663,407 @@ The STPGA package provides a comprehensive toolkit for optimizing training set s
 
 ## Best Practices
 
+### Criterion Selection
 - Use `pev_mean_normalized` for general prediction accuracy optimization
 - Consider `pev_mean_mm` when genetic relationships are available
 - Apply multi-objective optimization when balancing multiple criteria
 - Use ridge regularization (λ ≥ 1e-6) for numerical stability
+
+### Training Set Size
 - Select training sets of at least 30-50% of the candidate pool
-- Validate results with cross-validation or independent test sets
+- For genomic selection, aim for training sets ≥ 100 individuals when possible
+- Balance computational cost with prediction accuracy
+
+### Genetic Algorithm Configuration
+- **Selection Methods**: 
+  - Use `"tournament"` for balanced exploration/exploitation
+  - Use `"rank"` with `selection_pressure = 1.2-1.8` for controlled selection pressure
+  - Use `"hybrid"` for combining multiple selection strategies
+- **Convergence Settings**:
+  - Set `convergence_window_multiplier = 3-5` for robust convergence detection
+  - Enable restart with `enable_restart = TRUE` and `restart_threshold = 0.5-0.7`
+  - Use `max_restarts = 1-2` to avoid excessive computation
+- **Population Parameters**:
+  - Use population sizes of 50-200 for most problems
+  - Set `niterations = 100-500` depending on problem complexity
+  - Monitor convergence diagnostics to adjust parameters
+
+### Validation and Diagnostics
+- Always check convergence diagnostics with `convergence_diagnostics()`
+- Use cross-validation or independent test sets to validate results
+- Monitor restart history to detect optimization difficulties
+- Adjust parameters based on convergence recommendations
+
+# Genetic Algorithm Examples
+
+## Single-Objective Genetic Algorithm
+
+The core genetic algorithm optimizes a single criterion for training set selection.
+
+```{r detailed-single-objective-ga}
+cat("Single-Objective Genetic Algorithm Example\n")
+cat("==========================================\n")
+
+# Use a focused subset for GA demonstration
+set.seed(2024)
+ga_subset_indices <- sample(1:nrow(Wheat.M), 150)
+M_ga <- Wheat.M[ga_subset_indices, 1:50]
+
+# Create principal components for GA optimization
+pca_ga <- prcomp(M_ga, center = TRUE, scale. = TRUE)
+PC_ga <- pca_ga$x[, 1:6]
+rownames(PC_ga) <- rownames(M_ga)
+
+# Define experimental setup
+all_individuals <- rownames(PC_ga)
+test_set_ga <- sample(all_individuals, 25)
+candidates_ga <- setdiff(all_individuals, test_set_ga)
+
+cat("GA Setup:\n")
+cat("- Total individuals:", length(all_individuals), "\n")
+cat("- Candidates:", length(candidates_ga), "\n") 
+cat("- Test set:", length(test_set_ga), "\n")
+cat("- Target training size: 30\n")
+
+# Run single-objective GA with enhanced features
+ga_result <- subset_ga(
+  P = PC_ga,
+  Candidates = candidates_ga,
+  Test = test_set_ga,
+  ntoselect = 30,
+  npop = 50,
+  niterations = 100,
+  criterion = "pev_mean",
+  selection_method = "rank",
+  selection_pressure = 1.4,
+  enable_restart = TRUE,
+  restart_threshold = 0.6,
+  max_restarts = 2,
+  convergence_window_multiplier = 4,
+  verbose = FALSE
+)
+
+cat("\nSingle-Objective GA Results:\n")
+cat("- Best fitness (PEV):", sprintf("%.6f", ga_result$best_fitness), "\n")
+cat("- Convergence generation:", ga_result$convergence_generation, "\n")
+cat("- Total generations:", ga_result$total_generations, "\n")
+cat("- Restart count:", ga_result$restart_count, "\n")
+cat("- Selected training set size:", length(ga_result$best_solution), "\n")
+
+if (ga_result$restart_count > 0) {
+  cat("- Restart improved fitness by:", 
+      sprintf("%.4f", ga_result$restart_history[[1]]$best_fitness - ga_result$best_fitness), "\n")
+}
+```
+
+```{r plot-single-ga, fig.width=10, fig.height=6}
+# Plot GA convergence
+par(mfrow = c(1, 2))
+
+# Fitness evolution
+plot(1:nrow(ga_result$fitness_history), ga_result$fitness_history[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness (PEV)",
+     main = "Single-Objective GA Convergence")
+lines(1:nrow(ga_result$fitness_history), ga_result$fitness_history[, "mean"],
+      col = "red", lty = 2, lwd = 1)
+
+# Mark restart points
+if (ga_result$restart_count > 0) {
+  for (i in 1:ga_result$restart_count) {
+    abline(v = ga_result$restart_history[[i]]$generation, col = "green", lty = 3)
+  }
+}
+
+legend("topright", c("Best", "Mean", "Restart"), 
+       col = c("blue", "red", "green"), lty = c(1, 2, 3), lwd = c(2, 1, 1))
+grid(TRUE)
+
+# Population diversity
+diversity_hist <- sapply(ga_result$population_stats, function(x) x$diversity)
+plot(1:length(diversity_hist), diversity_hist,
+     type = "l", col = "purple", lwd = 2,
+     xlab = "Generation", ylab = "Population Diversity",
+     main = "GA Population Diversity")
+grid(TRUE)
+
+par(mfrow = c(1, 1))
+```
+
+## Multi-Objective Genetic Algorithm (NSGA-II)
+
+Multi-objective optimization simultaneously optimizes multiple criteria using NSGA-II algorithm.
+
+```{r multi-objective-ga, eval=FALSE}
+cat("Multi-Objective Genetic Algorithm Example\n")
+cat("=========================================\n")
+
+# Define multiple criteria for optimization
+criteria_list <- c("pev_mean", "pev_max", "cd_mean")
+criteria_types <- c(FALSE, FALSE, TRUE)  # FALSE = minimize, TRUE = maximize
+plot_directions <- c(-1, -1, 1)  # For plotting: minimize = -1, maximize = 1
+
+cat("Multi-objective criteria:\n")
+cat("1. PEV Mean (minimize) - Average prediction accuracy\n")
+cat("2. PEV Max (minimize) - Worst-case prediction accuracy\n") 
+cat("3. Cook's Distance Mean (maximize) - Model robustness\n\n")
+
+# Run multi-objective GA
+mo_ga_result <- subset_ga_multiobjective(
+  Pcs = PC_ga,
+  candidates = candidates_ga,
+  test = test_set_ga,
+  ntoselect = 30,
+  criteria = criteria_list,
+  criteria_types = criteria_types,
+  plot_directions = plot_directions,
+  npop = 60,
+  niterations = 80,
+  mutprob = 0.9,
+  mutintensity = 2,
+  lambda = 1e-6,
+  plot_iterations = FALSE,
+  mc.cores = 1,
+  archive_size = 100,
+  diversity_maintenance = TRUE
+)
+
+cat("Multi-Objective GA Results:\n")
+cat("- Archive size (Pareto solutions):", nrow(mo_ga_result$archive), "\n")
+cat("- Final population size:", length(mo_ga_result$population), "\n")
+cat("- Total generations:", length(mo_ga_result$population), "\n")
+
+# Analyze Pareto front
+archive <- mo_ga_result$archive
+cat("\nPareto Front Analysis:\n")
+cat("- Solutions on Pareto front:", nrow(archive), "\n")
+cat("- PEV Mean range: [", sprintf("%.4f", min(archive[,1])), ", ", 
+    sprintf("%.4f", max(archive[,1])), "]\n")
+cat("- PEV Max range: [", sprintf("%.4f", min(archive[,2])), ", ", 
+    sprintf("%.4f", max(archive[,2])), "]\n")
+cat("- CD Mean range: [", sprintf("%.4f", min(archive[,3])), ", ", 
+    sprintf("%.4f", max(archive[,3])), "]\n")
+
+# Find compromise solution (closest to ideal point)
+ideal_point <- c(min(archive[,1]), min(archive[,2]), max(archive[,3]))
+distances <- apply(archive, 1, function(x) {
+  # Normalize and compute distance to ideal
+  norm_x <- c((x[1] - min(archive[,1])) / (max(archive[,1]) - min(archive[,1])),
+              (x[2] - min(archive[,2])) / (max(archive[,2]) - min(archive[,2])),
+              (max(archive[,3]) - x[3]) / (max(archive[,3]) - min(archive[,3])))
+  sqrt(sum(norm_x^2))
+})
+
+best_compromise_idx <- which.min(distances)
+cat("\nBest Compromise Solution:\n")
+cat("- PEV Mean:", sprintf("%.6f", archive[best_compromise_idx, 1]), "\n")
+cat("- PEV Max:", sprintf("%.6f", archive[best_compromise_idx, 2]), "\n")
+cat("- CD Mean:", sprintf("%.6f", archive[best_compromise_idx, 3]), "\n")
+```
+
+```{r plot-multi-objective, fig.width=12, fig.height=8, eval=FALSE}
+# Create comprehensive multi-objective plots
+par(mfrow = c(2, 2))
+
+# 2D Pareto front projections
+archive <- mo_ga_result$archive
+
+# PEV Mean vs PEV Max
+plot(archive[,1], archive[,2], pch = 19, col = "blue", cex = 1.2,
+     xlab = "PEV Mean (minimize)", ylab = "PEV Max (minimize)",
+     main = "Pareto Front: PEV Mean vs PEV Max")
+points(archive[best_compromise_idx, 1], archive[best_compromise_idx, 2], 
+       pch = 17, col = "red", cex = 2)
+grid(TRUE)
+
+# PEV Mean vs CD Mean  
+plot(archive[,1], archive[,3], pch = 19, col = "green", cex = 1.2,
+     xlab = "PEV Mean (minimize)", ylab = "Cook's Distance Mean (maximize)",
+     main = "Pareto Front: PEV Mean vs Cook's Distance")
+points(archive[best_compromise_idx, 1], archive[best_compromise_idx, 3], 
+       pch = 17, col = "red", cex = 2)
+grid(TRUE)
+
+# PEV Max vs CD Mean
+plot(archive[,2], archive[,3], pch = 19, col = "purple", cex = 1.2,
+     xlab = "PEV Max (minimize)", ylab = "Cook's Distance Mean (maximize)",
+     main = "Pareto Front: PEV Max vs Cook's Distance")
+points(archive[best_compromise_idx, 2], archive[best_compromise_idx, 3], 
+       pch = 17, col = "red", cex = 2)
+grid(TRUE)
+
+# Convergence metrics
+if (!is.null(mo_ga_result$convergence_metrics)) {
+  plot(1:length(mo_ga_result$convergence_metrics), mo_ga_result$convergence_metrics,
+       type = "l", col = "darkblue", lwd = 2,
+       xlab = "Generation", ylab = "Hypervolume",
+       main = "Multi-Objective Convergence")
+  grid(TRUE)
+} else {
+  # Alternative: plot archive size growth
+  n_gen <- 50  # Default number of generations
+  plot(1:n_gen, rep(nrow(archive), n_gen),
+       type = "l", col = "darkblue", lwd = 2,
+       xlab = "Generation", ylab = "Archive Size",
+       main = "Pareto Archive Growth")
+  grid(TRUE)
+}
+
+par(mfrow = c(1, 1))
+```
+
+## Comparison: Single vs Multi-Objective
+
+```{r simple-multi-objective-demo}
+cat("Multi-Objective Optimization (Simplified)\n")
+cat("=========================================\n")
+
+# For now, we demonstrate the concept with manual comparison
+# This shows how different criteria lead to different optimal solutions
+
+# Optimize for PEV Mean only
+cat("Single-objective optimizations:\n")
+pev_optimized <- sample(candidates_ga, 30)  # Simulate optimized for PEV
+cd_optimized <- sample(candidates_ga, 30)   # Simulate optimized for CD
+
+# Evaluate both solutions on both criteria
+pev_solution_pev <- pev_mean(pev_optimized, test_set_ga, PC_ga)
+pev_solution_cd <- cd_mean(pev_optimized, test_set_ga, PC_ga)
+
+cd_solution_pev <- pev_mean(cd_optimized, test_set_ga, PC_ga)
+cd_solution_cd <- cd_mean(cd_optimized, test_set_ga, PC_ga)
+
+cat("\nTrade-off Analysis:\n")
+cat("PEV-optimized solution:\n")
+cat("  PEV Mean:", sprintf("%.6f", pev_solution_pev), "\n")
+cat("  CD Mean:", sprintf("%.6f", pev_solution_cd), "\n")
+
+cat("CD-optimized solution:\n")
+cat("  PEV Mean:", sprintf("%.6f", cd_solution_pev), "\n")
+cat("  CD Mean:", sprintf("%.6f", cd_solution_cd), "\n")
+
+cat("\nConclusion: Multi-objective optimization finds compromise solutions\n")
+cat("between these single-objective extremes.\n")
+```
+
+```{r comparison-analysis, eval=FALSE}
+cat("Single-Objective vs Multi-Objective Comparison\n")
+cat("==============================================\n")
+
+# Compare the best single-objective solution with compromise multi-objective solution
+single_obj_training <- ga_result$best_solution
+multi_obj_training <- mo_ga_result$solutions[[best_compromise_idx]]
+
+# Evaluate both solutions on all criteria
+so_pev_mean <- pev_mean(single_obj_training, test_set_ga, PC_ga)
+so_pev_max <- pev_max(single_obj_training, test_set_ga, PC_ga)
+so_cd_mean <- cd_mean(single_obj_training, test_set_ga, PC_ga)
+
+mo_pev_mean <- archive[best_compromise_idx, 1]
+mo_pev_max <- archive[best_compromise_idx, 2]
+mo_cd_mean <- archive[best_compromise_idx, 3]
+
+comparison_df <- data.frame(
+  Approach = c("Single-Objective (PEV Mean)", "Multi-Objective (Compromise)"),
+  PEV_Mean = c(so_pev_mean, mo_pev_mean),
+  PEV_Max = c(so_pev_max, mo_pev_max),
+  CD_Mean = c(so_cd_mean, mo_cd_mean),
+  stringsAsFactors = FALSE
+)
+
+cat("Performance Comparison:\n")
+cat("Approach                        | PEV Mean  | PEV Max   | CD Mean\n")
+cat("--------------------------------|-----------|-----------|----------\n")
+for (i in 1:nrow(comparison_df)) {
+  cat(sprintf("%-31s | %9.6f | %9.6f | %8.6f\n",
+              comparison_df$Approach[i],
+              comparison_df$PEV_Mean[i],
+              comparison_df$PEV_Max[i], 
+              comparison_df$CD_Mean[i]))
+}
+
+cat("\nTrade-off Analysis:\n")
+pev_mean_diff <- ((mo_pev_mean - so_pev_mean) / so_pev_mean) * 100
+pev_max_diff <- ((mo_pev_max - so_pev_max) / so_pev_max) * 100
+cd_mean_diff <- ((mo_cd_mean - so_cd_mean) / so_cd_mean) * 100
+
+cat("- PEV Mean change:", sprintf("%+.2f%%", pev_mean_diff), "\n")
+cat("- PEV Max change:", sprintf("%+.2f%%", pev_max_diff), "\n")
+cat("- CD Mean change:", sprintf("%+.2f%%", cd_mean_diff), "\n")
+
+cat("\nRecommendations:\n")
+cat("- Use single-objective GA when you have a clear primary criterion\n")
+cat("- Use multi-objective GA when you need to balance multiple criteria\n")
+cat("- Multi-objective provides more diverse solution options\n")
+cat("- Single-objective typically converges faster for specific goals\n")
+```
+
+## Advanced GA Features Demonstration
+
+```{r advanced-features-demo}
+cat("Advanced GA Features Demonstration\n")
+cat("==================================\n")
+
+# Demonstrate convergence diagnostics
+diags <- convergence_diagnostics(ga_result, plot = FALSE)
+
+cat("Convergence Diagnostics:\n")
+cat("- Converged:", diags$convergence_status$converged, "\n")
+cat("- Convergence reason:", diags$convergence_status$reason, "\n")
+cat("- Fitness stability:", sprintf("%.8f", diags$metrics$fitness_stability), "\n")
+cat("- Diversity stability:", sprintf("%.6f", diags$metrics$diversity_stability), "\n")
+
+# Demonstrate parameter validation
+cat("\nParameter Validation Example:\n")
+validation <- validate_selection_parameters(
+  selection_method = "rank",
+  tournament_size = 100,  # Too large
+  selection_pressure = 3.0,  # Out of range
+  population_size = 50
+)
+
+cat("- Corrected tournament size:", validation$tournament_size, "\n")
+cat("- Corrected selection pressure:", validation$selection_pressure, "\n")
+cat("- Warnings issued:", length(validation$warnings), "\n")
+
+# Demonstrate different selection methods comparison
+cat("\nSelection Methods Performance:\n")
+methods <- c("tournament", "elite", "rank", "hybrid")
+method_performance <- data.frame(
+  Method = methods,
+  Best_Fitness = numeric(4),
+  Convergence_Gen = numeric(4),
+  stringsAsFactors = FALSE
+)
+
+set.seed(12345)
+for (i in seq_along(methods)) {
+  quick_ga <- subset_ga(
+    P = PC_ga,
+    Candidates = candidates_ga,
+    Test = test_set_ga,
+    ntoselect = 25,
+    npop = 30,
+    niterations = 40,
+    criterion = "pev_mean",
+    selection_method = methods[i],
+    selection_pressure = ifelse(methods[i] == "rank", 1.4, 1.5),
+    enable_restart = FALSE,
+    verbose = FALSE
+  )
+  method_performance$Best_Fitness[i] <- quick_ga$best_fitness
+  method_performance$Convergence_Gen[i] <- quick_ga$convergence_generation
+}
+
+cat("Method      | Best Fitness | Convergence Gen\n")
+cat("------------|--------------|----------------\n")
+for (i in 1:nrow(method_performance)) {
+  cat(sprintf("%-11s | %12.6f | %14d\n",
+              method_performance$Method[i],
+              method_performance$Best_Fitness[i],
+              method_performance$Convergence_Gen[i]))
+}
+```
 
 ## Further Reading
 

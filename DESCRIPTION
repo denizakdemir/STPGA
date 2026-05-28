@@ -1,8 +1,8 @@
 Package: STPGA
 Type: Package
 Title: Selection of Training Populations by Genetic Algorithm
-Version: 7.0.1
-Date: 2026-05-26
+Version: 7.0.2
+Date: 2026-05-28
 Author: Deniz Akdemir
 Maintainer: Deniz Akdemir <deniz.akdemir.work@gmail.com>
 Description: Advanced genetic algorithms for optimal subset selection in high-dimensional prediction problems. 

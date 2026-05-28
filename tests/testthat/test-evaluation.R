@@ -6,13 +6,14 @@ test_that("evaluate_population function works correctly", {
   P <- matrix(rnorm(n * p), n, p)
   rownames(P) <- paste0("ind", 1:n)
   
+  test_set <- paste0("ind", 21:25)
+  candidates <- setdiff(rownames(P), test_set)
+  
   # Create test population
   population <- list()
   for (i in 1:5) {
-    population[[i]] <- sample(rownames(P), 10)
+    population[[i]] <- sample(candidates, 10)
   }
-  
-  test_set <- paste0("ind", 21:25)
   
   # Test basic functionality
   fitness <- evaluate_population(population, P, test_set, "pev_mean_normalized")
@@ -66,13 +67,14 @@ test_that("evaluate_population_smart function works correctly", {
   P <- matrix(rnorm(n * p), n, p)
   rownames(P) <- paste0("ind", 1:n)
   
+  test_set <- paste0("ind", 31:35)
+  candidates <- setdiff(rownames(P), test_set)
+  
   # Create larger population for batch testing
   population <- list()
   for (i in 1:15) {
-    population[[i]] <- sample(rownames(P), 12)
+    population[[i]] <- sample(candidates, 12)
   }
-  
-  test_set <- paste0("ind", 31:35)
   
   # Test basic functionality
   fitness_smart <- evaluate_population_smart(population, P, test_set, "pev_mean")
@@ -295,11 +297,11 @@ test_that("legacy wrapper functions work correctly", {
   rownames(P) <- paste0("ind", 1:n)
   
   population <- list()
-  for (i in 1:4) {
-    population[[i]] <- sample(rownames(P), 8)
-  }
-  
   test_set <- paste0("ind", 20:23)
+  candidates <- setdiff(rownames(P), test_set)
+  for (i in 1:4) {
+    population[[i]] <- sample(candidates, 8)
+  }
   
   # Test evaluate_population_optimized wrapper
   fitness_new <- evaluate_population(population, P, test_set, "pev_mean")
@@ -360,13 +362,14 @@ test_that("parallel processing works correctly", {
   P <- matrix(rnorm(n * p), n, p)
   rownames(P) <- paste0("ind", 1:n)
   
+  test_set <- paste0("ind", 25:28)
+  candidates <- setdiff(rownames(P), test_set)
+  
   # Create larger population for parallel testing
   population <- list()
   for (i in 1:20) {
-    population[[i]] <- sample(rownames(P), 10)
+    population[[i]] <- sample(candidates, 10)
   }
-  
-  test_set <- paste0("ind", 25:28)
   
   # Test sequential vs parallel (both with mc.cores = 1 for testing)
   fitness_sequential <- evaluate_population(population, P, test_set, "pev_mean", mc.cores = 1)
@@ -391,12 +394,12 @@ test_that("numerical stability and edge cases", {
   P[, p] <- P[, 1] + rnorm(n, sd = 0.01)
   rownames(P) <- paste0("ind", 1:n)
   
-  population <- list(
-    sample(rownames(P), 12),
-    sample(rownames(P), 12)
-  )
-  
   test_set <- paste0("ind", 18:20)
+  candidates <- setdiff(rownames(P), test_set)
+  population <- list(
+    sample(candidates, 12),
+    sample(candidates, 12)
+  )
   
   # Should handle ill-conditioned matrices gracefully
   fitness_ill <- evaluate_population(population, P, test_set, "a_optimality", lambda = 1e-3)

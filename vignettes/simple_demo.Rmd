@@ -2,16 +2,14 @@
 title: "STPGA Package Demo Report"
 author: "Deniz Akdemir"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: true
-    toc_depth: '2'
-    df_print: paged
-  pdf_document:
+output: 
+  rmarkdown::html_vignette:
     toc: true
     toc_depth: 2
-vignette: "%\\VignetteIndexEntry{STPGA Package Demo Report} %\\VignetteEngine{knitr::rmarkdown}
-  %\\VignetteEncoding{UTF-8}\n"
+vignette: >
+  %\VignetteIndexEntry{STPGA Package Demo Report}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -25,7 +23,17 @@ This document demonstrates the modernized STPGA package functionality using the 
 
 ## Package Overview
 
-The STPGA package provides modern genetic algorithms for optimal subset selection in genomic prediction and experimental design.
+The STPGA package provides advanced genetic algorithms for optimal subset selection in genomic prediction and experimental design. Version 7.0.0 introduces significant enhancements including multi-criteria convergence detection, restart mechanisms, and enhanced selection methods.
+
+### New Features in v7.0.0
+
+- **Enhanced Convergence Detection**: Multi-criteria monitoring of fitness, diversity, and improvement rates
+- **Restart Mechanisms**: Automatic detection and recovery from premature convergence  
+- **Advanced Selection Methods**: Rank-based selection with configurable pressure control
+- **Convergence Diagnostics**: Comprehensive analysis and optimization recommendations
+- **Parameter Validation**: Automatic correction of invalid parameters with user warnings
+
+For detailed coverage of these features, see the "Advanced Genetic Algorithm Features" vignette.
 
 ```{r package-info}
 # Package information
@@ -160,6 +168,162 @@ aopt_legacy <- criterion(train_set, test_set, Wheat.PC5, criterion = "AOPT")
 cat("Modern a_optimality:", sprintf("%.6e", aopt_modern), "\n")
 cat("Legacy AOPT:        ", sprintf("%.6e", aopt_legacy), "\n")
 cat("Values match:", abs(aopt_modern - aopt_legacy) < 1e-10, "\n")
+```
+
+## Genetic Algorithm Optimization
+
+### Single-Objective GA
+
+```{r basic-ga-demo}
+cat("Basic Genetic Algorithm Demonstration\n")
+cat("====================================\n")
+
+# Use a smaller subset for quick demonstration
+set.seed(999)
+demo_indices <- sample(1:nrow(Wheat.M), 100)
+M_demo <- Wheat.M[demo_indices, 1:30]
+
+# Create principal components for GA
+pca_demo <- prcomp(M_demo, center = TRUE, scale. = TRUE)
+PC_demo <- pca_demo$x[, 1:4]
+rownames(PC_demo) <- rownames(M_demo)
+
+# Define sets
+all_demo <- rownames(PC_demo)
+test_demo <- sample(all_demo, 20)
+candidates_demo <- setdiff(all_demo, test_demo)
+
+cat("Setup:\n")
+cat("- Total individuals:", length(all_demo), "\n")
+cat("- Test set:", length(test_demo), "\n")
+cat("- Candidates:", length(candidates_demo), "\n")
+
+# Run basic GA
+ga_basic <- subset_ga(
+  P = PC_demo,
+  Candidates = candidates_demo,
+  Test = test_demo,
+  ntoselect = 20,
+  npop = 30,
+  niterations = 50,
+  criterion = "pev_mean",
+  verbose = FALSE
+)
+
+cat("\nGA Results:\n")
+cat("- Best fitness:", sprintf("%.6f", ga_basic$best_fitness), "\n")
+cat("- Convergence generation:", ga_basic$convergence_generation, "\n")
+cat("- Training set selected:", length(ga_basic$best_solution), "\n")
+
+# Compare with random selection
+random_training <- sample(candidates_demo, 20)
+random_fitness <- pev_mean(random_training, test_demo, PC_demo)
+
+cat("\nComparison with Random Selection:\n")
+cat("- GA fitness:", sprintf("%.6f", ga_basic$best_fitness), "\n")
+cat("- Random fitness:", sprintf("%.6f", random_fitness), "\n")
+improvement <- ((random_fitness - ga_basic$best_fitness) / random_fitness) * 100
+cat("- GA improvement:", sprintf("%.1f%%", improvement), "\n")
+```
+
+### Multi-Objective GA Example
+
+```{r basic-mo-ga-demo}
+cat("Basic Multi-Objective GA Demonstration\n")
+cat("======================================\n")
+
+# Define simple multi-objective optimization
+criteria_basic <- c("pev_mean", "cd_mean")
+criteria_types_basic <- c(FALSE, TRUE)  # FALSE = minimize, TRUE = maximize
+plot_directions_basic <- c(-1, 1)
+
+cat("Optimizing two criteria:\n")
+cat("1. PEV Mean (minimize) - prediction accuracy\n")
+cat("2. Cook's Distance Mean (maximize) - robustness\n")
+
+# Run multi-objective GA
+mo_basic <- subset_ga_multiobjective(
+  Pcs = PC_demo,
+  candidates = candidates_demo,
+  test = test_demo,
+  ntoselect = 20,
+  criteria = criteria_basic,
+  criteria_types = criteria_types_basic,
+  plot_directions = plot_directions_basic,
+  npop = 40,
+  niterations = 30,
+  mutprob = 0.8,
+  plot_iterations = FALSE
+)
+
+cat("\nMulti-Objective Results:\n")
+if (!is.null(mo_basic$archive)) {
+  cat("- Pareto solutions found:", nrow(mo_basic$archive), "\n")
+} else {
+  cat("- Pareto solutions found: 0\n")
+}
+cat("- Final population size:", length(mo_basic$population), "\n")
+
+# Show Pareto front
+archive_basic <- mo_basic$archive
+if (!is.null(archive_basic) && nrow(archive_basic) > 0) {
+  cat("\nPareto Front Range:\n")
+  cat("- PEV Mean: [", sprintf("%.4f", min(archive_basic[,1])), ", ", 
+      sprintf("%.4f", max(archive_basic[,1])), "]\n")
+  cat("- CD Mean: [", sprintf("%.4f", min(archive_basic[,2])), ", ", 
+      sprintf("%.4f", max(archive_basic[,2])), "]\n")
+
+  # Find best compromise solution
+  distances_basic <- apply(archive_basic, 1, function(x) {
+    norm_pev <- (x[1] - min(archive_basic[,1])) / (max(archive_basic[,1]) - min(archive_basic[,1]))
+    norm_cd <- (max(archive_basic[,2]) - x[2]) / (max(archive_basic[,2]) - min(archive_basic[,2]))
+    sqrt(norm_pev^2 + norm_cd^2)
+  })
+
+  best_idx <- which.min(distances_basic)
+  cat("\nBest Compromise Solution:\n")
+  cat("- PEV Mean:", sprintf("%.6f", archive_basic[best_idx, 1]), "\n")
+  cat("- CD Mean:", sprintf("%.6f", archive_basic[best_idx, 2]), "\n")
+} else {
+  cat("\nNo Pareto solutions found in archive\n")
+  # Create dummy data for plotting
+  archive_basic <- matrix(c(0.5, 0.3), nrow = 1)
+  best_idx <- 1
+}
+```
+
+```{r plot-ga-comparison, fig.width=10, fig.height=6}
+# Plot GA results comparison
+par(mfrow = c(1, 2))
+
+# Single-objective convergence
+plot(1:nrow(ga_basic$fitness_history), ga_basic$fitness_history[, "best"],
+     type = "l", col = "blue", lwd = 2,
+     xlab = "Generation", ylab = "Best Fitness (PEV)",
+     main = "Single-Objective GA Convergence")
+lines(1:nrow(ga_basic$fitness_history), ga_basic$fitness_history[, "mean"],
+      col = "red", lty = 2)
+legend("topright", c("Best", "Mean"), col = c("blue", "red"), lty = c(1, 2))
+grid(TRUE)
+
+# Multi-objective Pareto front
+if (!is.null(archive_basic) && nrow(archive_basic) > 0) {
+  plot(archive_basic[,1], archive_basic[,2], pch = 19, col = "darkgreen", cex = 1.2,
+       xlab = "PEV Mean (minimize)", ylab = "Cook's Distance Mean (maximize)",
+       main = "Multi-Objective Pareto Front")
+  points(archive_basic[best_idx, 1], archive_basic[best_idx, 2], 
+         pch = 17, col = "red", cex = 2)
+  legend("topright", c("Pareto Solutions", "Best Compromise"), 
+         pch = c(19, 17), col = c("darkgreen", "red"))
+} else {
+  plot(0.5, 0.3, pch = 19, col = "darkgreen", cex = 1.2,
+       xlab = "PEV Mean (minimize)", ylab = "Cook's Distance Mean (maximize)",
+       main = "Multi-Objective Pareto Front (No Solutions)")
+  text(0.5, 0.25, "No Pareto solutions found", cex = 1.2)
+}
+grid(TRUE)
+
+par(mfrow = c(1, 1))
 ```
 
 ## Summary

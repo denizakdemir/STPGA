@@ -30,6 +30,42 @@ minimizing the trace of (X'X)^(-1) where X is the design matrix.
 
 Mathematical formula: A = tr((X'X)^(-1))
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for faster computation
+set.seed(123)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:20]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define candidate and test sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute A-optimality (minimizes average prediction variance)
+aopt_value <- a_optimality(train_set, test_set, PC_subset)
+print(paste("A-optimality value:", round(aopt_value, 6)))
+
+# Compare different training set sizes
+small_train <- sample(candidates, 10)
+large_train <- sample(candidates, 30)
+
+aopt_small <- a_optimality(small_train, test_set, PC_subset)
+aopt_large <- a_optimality(large_train, test_set, PC_subset)
+
+print(paste("Small training (n=10):", round(aopt_small, 6)))
+print(paste("Large training (n=30):", round(aopt_large, 6)))
+print(paste("Improvement factor:", round(aopt_small / aopt_large, 2)))
+
+}
 \references{
 Fedorov, V.V. (1972). Theory of Optimal Experiments. Academic Press.
 }

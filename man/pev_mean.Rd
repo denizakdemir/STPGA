@@ -33,3 +33,43 @@ PEV = Var(y - ŷ) = σ²[I + X_test(X_train'X_train)^(-1)X_test']
 The identity matrix accounts for the inherent variability of new observations.
 This is the correct formula according to experimental design literature.
 }
+\examples{
+# Load wheat genomic data
+data(WheatData)
+
+# Create a subset for demonstration
+set.seed(789)
+subset_indices <- sample(1:nrow(Wheat.M), 80)
+M_subset <- Wheat.M[subset_indices, 1:25]
+
+# Extract principal components
+pca_result <- prcomp(M_subset, center = TRUE, scale. = TRUE)
+PC_subset <- pca_result$x[, 1:5]
+rownames(PC_subset) <- rownames(M_subset)
+
+# Define sets
+all_individuals <- rownames(PC_subset)
+test_set <- sample(all_individuals, 15)
+candidates <- setdiff(all_individuals, test_set)
+train_set <- sample(candidates, 20)
+
+# Compute mean PEV (prediction accuracy measure)
+pev_value <- pev_mean(train_set, test_set, PC_subset)
+print(paste("Mean PEV:", round(pev_value, 6)))
+
+# Compare normalized vs non-normalized
+pev_norm <- pev_mean(train_set, test_set, PC_subset, normalized = TRUE)
+print(paste("Normalized PEV:", round(pev_norm, 6)))
+
+# Effect of training set size on PEV
+small_train <- sample(candidates, 10)
+large_train <- sample(candidates, 30)
+
+pev_small <- pev_mean(small_train, test_set, PC_subset)
+pev_large <- pev_mean(large_train, test_set, PC_subset)
+
+print(paste("Small training PEV:", round(pev_small, 6)))
+print(paste("Large training PEV:", round(pev_large, 6)))
+print(paste("PEV reduction factor:", round(pev_small / pev_large, 2)))
+
+}

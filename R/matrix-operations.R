@@ -13,6 +13,9 @@ compute_amatrix <- function(M, pieces = 10, mc.cores = 1) {
   if (missing(M) || !is.matrix(M)) {
     stop("M must be a matrix")
   }
+  if (missing(pieces)) {
+    pieces <- min(10, ncol(M))
+  }
   if (pieces <= 0 || pieces > ncol(M)) {
     stop("pieces must be positive and <= ncol(M)")
   }
@@ -46,6 +49,10 @@ compute_amatrix <- function(M, pieces = 10, mc.cores = 1) {
       total_cross_product <- total_cross_product + pieces_list[[i]]$cross_product
       total_denominator <- total_denominator + 
         sum(2 * pieces_list[[i]]$allele_freq * (1 - pieces_list[[i]]$allele_freq))
+    }
+    
+    if (!is.finite(total_denominator) || total_denominator <= .Machine$double.eps) {
+      return(matrix(0, nrow(total_cross_product), ncol(total_cross_product)))
     }
     
     return(total_cross_product / total_denominator)
@@ -98,7 +105,11 @@ genomic_relationship_matrix <- function(M, method = "vanraden", pieces = 10, mc.
       
       # Compute relationship matrix
       denom <- sum(2 * p * (1 - p))
-      G <- tcrossprod(W) / denom
+      G <- if (!is.finite(denom) || denom <= .Machine$double.eps) {
+        matrix(0, nrow(M), nrow(M))
+      } else {
+        tcrossprod(W) / denom
+      }
       
       # Set names
       if (!is.null(rownames(M))) {
@@ -128,12 +139,23 @@ genomic_relationship_matrix <- function(M, method = "vanraden", pieces = 10, mc.
 
 #' Efficient matrix inversion with numerical stability
 #' @param X Matrix to invert
-#' @param lambda Ridge parameter for regularization (default: 1e-6)
+#' @param lambda Ridge parameter for regularization (default: 0)
 #' @param method Inversion method: "cholesky", "svd", "eigen" (default: "cholesky")
 #' @return Inverse matrix
-safe_matrix_inverse <- function(X, lambda = 1e-6, method = "cholesky") {
+#' @export
+safe_matrix_inverse <- function(X, lambda = 0, method = "cholesky") {
   
   method <- match.arg(method, c("cholesky", "svd", "eigen"))
+  
+  if (!is.matrix(X)) {
+    stop("X must be a matrix")
+  }
+  if (nrow(X) != ncol(X)) {
+    stop("X must be a square matrix")
+  }
+  if (any(!is.finite(X))) {
+    stop("X contains non-finite values")
+  }
   
   # Add ridge regularization
   if (lambda > 0) {
@@ -144,6 +166,12 @@ safe_matrix_inverse <- function(X, lambda = 1e-6, method = "cholesky") {
   
   switch(method,
     "cholesky" = {
+      stability <- matrix_stability_check(X_reg)
+      if (isTRUE(stability$rank_deficient) || !isTRUE(stability$is_well_conditioned)) {
+        warning("Matrix is rank deficient or ill-conditioned, falling back to SVD")
+        return(safe_matrix_inverse(X, lambda, "svd"))
+      }
+      
       tryCatch({
         L <- chol(X_reg)
         return(chol2inv(L))
@@ -158,7 +186,11 @@ safe_matrix_inverse <- function(X, lambda = 1e-6, method = "cholesky") {
       d <- svd_result$d
       
       # Handle near-zero eigenvalues
-      d_inv <- ifelse(d > 1e-12, 1/d, 0)
+      rank_threshold <- max(1e-12, max(d) * 1e-12)
+      if (sum(d > rank_threshold) < nrow(X_reg)) {
+        warning("Matrix is rank deficient. Using pseudo-inverse.")
+      }
+      d_inv <- ifelse(d > rank_threshold, 1/d, 0)
       
       return(svd_result$v %*% diag(d_inv) %*% t(svd_result$u))
     },
@@ -169,7 +201,11 @@ safe_matrix_inverse <- function(X, lambda = 1e-6, method = "cholesky") {
       vectors <- eigen_result$vectors
       
       # Handle near-zero eigenvalues
-      values_inv <- ifelse(values > 1e-12, 1/values, 0)
+      rank_threshold <- max(1e-12, max(abs(values)) * 1e-12)
+      if (sum(abs(values) > rank_threshold) < nrow(X_reg)) {
+        warning("Matrix is rank deficient. Using pseudo-inverse.")
+      }
+      values_inv <- ifelse(abs(values) > rank_threshold, 1/values, 0)
       
       return(vectors %*% diag(values_inv) %*% t(vectors))
     }
@@ -184,29 +220,43 @@ matrix_stability_check <- function(X) {
   # Compute eigenvalues for symmetric matrices
   if (isSymmetric(X)) {
     eigenvals <- eigen(X, symmetric = TRUE, only.values = TRUE)$values
-    condition_number <- max(eigenvals) / min(eigenvals[eigenvals > 1e-12])
+    scale <- max(abs(eigenvals))
+    threshold <- max(1e-12, scale * 1e-12)
+    numerical_rank <- sum(abs(eigenvals) > threshold)
+    condition_number <- if (numerical_rank < min(dim(X))) {
+      Inf
+    } else {
+      max(abs(eigenvals)) / min(abs(eigenvals))
+    }
   } else {
     # Use SVD for non-symmetric matrices
     svd_result <- svd(X)
     singular_vals <- svd_result$d
-    condition_number <- max(singular_vals) / min(singular_vals[singular_vals > 1e-12])
+    scale <- max(singular_vals)
+    threshold <- max(1e-12, scale * 1e-12)
+    numerical_rank <- sum(singular_vals > threshold)
+    condition_number <- if (numerical_rank < min(dim(X))) {
+      Inf
+    } else {
+      max(singular_vals) / min(singular_vals)
+    }
   }
   
   # Check for potential issues
   is_positive_definite <- if (isSymmetric(X)) {
-    all(eigenvals > 1e-12)
+    all(eigenvals > threshold)
   } else {
     NA
   }
   
-  is_well_conditioned <- condition_number < 1e12
+  is_well_conditioned <- is.finite(condition_number) && condition_number < 1e10
   
   list(
     condition_number = condition_number,
     is_positive_definite = is_positive_definite,
     is_well_conditioned = is_well_conditioned,
-    rank_deficient = sum(if (isSymmetric(X)) eigenvals > 1e-12 else singular_vals > 1e-12) < min(dim(X)),
-    numerical_rank = sum(if (isSymmetric(X)) eigenvals > 1e-12 else singular_vals > 1e-12)
+    rank_deficient = numerical_rank < min(dim(X)),
+    numerical_rank = numerical_rank
   )
 }
 

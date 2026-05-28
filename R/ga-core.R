@@ -121,7 +121,8 @@ subset_ga <- function(P, Candidates, Test = NULL, ntoselect,
                      verbose = FALSE) {
   
   # Input validation
-  if ((ncol(P) + 1) > ntoselect) {
+  distance_criteria <- c("max_to_test", "mean_to_test", "neg_min_internal", "neg_mean_internal")
+  if (!criterion %in% distance_criteria && (ncol(P) + 1) > ntoselect) {
     warning("The algorithm does not work well with p>ntrain, perhaps use unsupervised dimension reduction on P.")
   }
   
@@ -143,6 +144,101 @@ subset_ga <- function(P, Candidates, Test = NULL, ntoselect,
     for (warning_msg in selection_validation$warnings) {
       message("Parameter adjustment: ", warning_msg)
     }
+  }
+  
+  if (length(Candidates) == ntoselect) {
+    best_fitness <- evaluate_population(
+      list(Candidates), P, Test, criterion, lambda, C,
+      K = NULL, Vg = Vg, Ve = Ve, mc.cores = 1
+    )[1]
+    fitness_history <- matrix(best_fitness, nrow = 1, ncol = 3)
+    colnames(fitness_history) <- c("best", "mean", "worst")
+    population <- list(Candidates)
+    generation_stats <- list(compute_population_stats(population, best_fitness))
+    convergence_history <- list(
+      fitness = best_fitness,
+      diversity = 0,
+      improvement_rate = 0,
+      fitness_variance = 0
+    )
+    
+    return(list(
+      best_solution = Candidates,
+      best_fitness = best_fitness,
+      fitness_history = fitness_history,
+      population_stats = generation_stats,
+      convergence_history = convergence_history,
+      restart_history = list(),
+      final_population = population,
+      convergence_generation = 0,
+      total_generations = 0,
+      restart_count = 0,
+      parameters = list(
+        npop = npop,
+        niterations = 0,
+        criterion = criterion,
+        selection_method = selection_method,
+        tournament_size = tournament_size,
+        selection_pressure = selection_pressure,
+        adaptive_mutation = adaptive_mutation,
+        diversity_preservation = diversity_preservation,
+        diversity_method = diversity_method,
+        convergence_window = 0,
+        enable_restart = enable_restart,
+        max_restarts = max_restarts,
+        restart_threshold = restart_threshold
+      )
+    ))
+  }
+  
+  if (is.null(Test) && criterion %in% c("cd_mean", "cd_mean_normalized", "CDMEAN", "CDMEAN2")) {
+    best_solution <- sample(Candidates, ntoselect)
+    best_fitness <- do.call("criterion", list(
+      train = best_solution,
+      test = NULL,
+      P = P,
+      lambda = lambda,
+      C = C,
+      criterion = criterion
+    ))
+    fitness_history <- matrix(best_fitness, nrow = 1, ncol = 3)
+    colnames(fitness_history) <- c("best", "mean", "worst")
+    population <- list(best_solution)
+    generation_stats <- list(compute_population_stats(population, best_fitness))
+    convergence_history <- list(
+      fitness = best_fitness,
+      diversity = 0,
+      improvement_rate = 0,
+      fitness_variance = 0
+    )
+    
+    return(list(
+      best_solution = best_solution,
+      best_fitness = best_fitness,
+      fitness_history = fitness_history,
+      population_stats = generation_stats,
+      convergence_history = convergence_history,
+      restart_history = list(),
+      final_population = population,
+      convergence_generation = 0,
+      total_generations = 0,
+      restart_count = 0,
+      parameters = list(
+        npop = npop,
+        niterations = 0,
+        criterion = criterion,
+        selection_method = selection_method,
+        tournament_size = tournament_size,
+        selection_pressure = selection_pressure,
+        adaptive_mutation = adaptive_mutation,
+        diversity_preservation = diversity_preservation,
+        diversity_method = diversity_method,
+        convergence_window = 0,
+        enable_restart = enable_restart,
+        max_restarts = max_restarts,
+        restart_threshold = restart_threshold
+      )
+    ))
   }
   
   # Initialize population
@@ -222,6 +318,15 @@ subset_ga <- function(P, Candidates, Test = NULL, ntoselect,
     
     # Population statistics
     generation_stats[[generation]] <- compute_population_stats(population, fitness_values)
+    
+    if (generation >= niterreg &&
+        all(is.finite(fitness_values)) &&
+        isTRUE(stats::sd(fitness_values) == 0)) {
+      if (verbose) {
+        message("Stopping early: all population fitness values are identical.")
+      }
+      break
+    }
     
     # Adaptive mutation rate
     if (adaptive_mutation) {
@@ -452,11 +557,14 @@ subset_ga <- function(P, Candidates, Test = NULL, ntoselect,
 #' @param ... Additional parameters (same as subset_ga but without Test parameter)
 #' @return List containing best solution and statistics
 subset_ga_single <- function(P, ntoselect, ...) {
-  # Call main GA function with Test = NULL
   args <- list(...)
+  if (is.null(args$Candidates)) {
+    args$Candidates <- rownames(P)
+  }
+  if (!"Test" %in% names(args)) {
+    args["Test"] <- list(NULL)
+  }
   args$P <- P
-  args$Candidates <- rownames(P)
-  args$Test <- NULL
   args$ntoselect <- ntoselect
   
   do.call(subset_ga, args)

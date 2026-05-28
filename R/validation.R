@@ -208,12 +208,12 @@ check_memory_usage <- function(n_individuals, n_variables, operation = "matrix_m
   )
   
   # Convert to readable units
-  if (memory_estimates > 1e9) {  # > 1 GB
+  if (memory_estimates > 1e8) {  # > 100 MB
     memory_gb <- memory_estimates / 1e9
     warning("Large computation detected: estimated memory usage ", 
-            sprintf("%.1f", memory_gb), " GB for ", operation, 
+            sprintf("%.2f", memory_gb), " GB for ", operation, 
             ". Consider using subsets or parallel processing.")
-  } else if (memory_estimates > 1e8) {  # > 100 MB
+  } else if (memory_estimates > 5e7) {  # > 50 MB
     memory_mb <- memory_estimates / 1e6
     message("Moderate computation: estimated memory usage ", 
             sprintf("%.0f", memory_mb), " MB for ", operation)
